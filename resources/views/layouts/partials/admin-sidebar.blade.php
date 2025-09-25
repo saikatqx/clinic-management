@@ -29,12 +29,12 @@
     👨‍⚕️ Doctors
     </a>
 
-    {{--<a href="{{ route('admin.services.index') }}"
+    <a href="{{ route('admin.services.index') }}"
         class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
         📋 Services
     </a>
 
-    <a href="{{ route('admin.appointments.index') }}"
+    {{--<a href="{{ route('admin.appointments.index') }}"
         class="{{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}">
         📅 Appointments
     </a>--}}

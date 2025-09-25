@@ -23,6 +23,9 @@
                 <input type="text" name="name" id="name" class="form-control"
                     value="{{ old('name', $doctor->name ?? '') }}" placeholder="Enter doctor's name">
                 <p id="nameError" class="text-danger"></p>
+                @error('name')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Specialty -->
@@ -38,6 +41,9 @@
                     @endforeach
                 </select>
                 <p id="specialtyError" class="text-danger"></p>
+                @error('specialty_id')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Email -->
@@ -46,6 +52,9 @@
                 <input type="email" name="email" id="email" class="form-control"
                     value="{{ old('email', $doctor->email ?? '') }}" placeholder="Enter email">
                 <p id="emailError" class="text-danger"></p>
+                @error('email')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Phone -->
@@ -54,6 +63,9 @@
                 <input type="text" name="phone" id="phone" class="form-control"
                     value="{{ old('phone', $doctor->phone ?? '') }}" placeholder="Enter phone number">
                 <p id="phoneError" class="text-danger"></p>
+                @error('phone')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Qualification -->
@@ -61,6 +73,9 @@
                 <label for="qualification" class="form-label fw-bold">Qualification</label>
                 <input type="text" name="qualification" id="qualification" class="form-control"
                     value="{{ old('qualification', $doctor->qualification ?? '') }}" placeholder="e.g., MBBS, MD">
+                @error('qualification')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Profile Image -->
@@ -68,6 +83,9 @@
                 <label for="profile_image" class="form-label fw-bold">Profile Image</label>
                 <input type="file" name="profile_image" id="profile_image" class="form-control" accept="image/*">
                 <p id="imageError" class="text-danger"></p>
+                @error('profile_image')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
 
                 @if(isset($doctor) && $doctor->profile_image)
                 <img src="{{ asset('images/doctors/'.$doctor->profile_image) }}" class="img-thumbnail mt-2" width="100">
@@ -79,6 +97,9 @@
                 <label for="bio" class="form-label fw-bold">Bio</label>
                 <textarea name="bio" id="bio" rows="4" class="form-control"
                     placeholder="Short description about the doctor">{{ old('bio', $doctor->bio ?? '') }}</textarea>
+                @error('bio')
+                <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Status -->
@@ -104,7 +125,7 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('.select2').select2();
     });
 
@@ -113,28 +134,29 @@
 
         // Reset error messages
         document.querySelectorAll('.text-danger').forEach(el => el.textContent = "");
+        document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove("is-invalid"));
 
         // Fields
         let name = document.getElementById("name");
         let specialty = document.getElementById("specialty_id");
         let email = document.getElementById("email");
+        let image = document.getElementById("profile_image");
 
-        name.classList.remove("is-invalid");
-        specialty.classList.remove("is-invalid");
-        email.classList.remove("is-invalid");
-
+        // 🔹 Name
         if (name.value.trim() === "") {
             document.getElementById("nameError").textContent = "Doctor name is required";
             name.classList.add("is-invalid");
             isValid = false;
         }
 
+        // 🔹 Specialty
         if (specialty.value === "") {
             document.getElementById("specialtyError").textContent = "Specialty is required";
             specialty.classList.add("is-invalid");
             isValid = false;
         }
 
+        // 🔹 Email
         if (email.value.trim() === "") {
             document.getElementById("emailError").textContent = "Email is required";
             email.classList.add("is-invalid");
@@ -143,6 +165,18 @@
             document.getElementById("emailError").textContent = "Enter a valid email address";
             email.classList.add("is-invalid");
             isValid = false;
+        }
+
+        // 🔹 Image (Optional, but validate size if uploaded)
+        if (image.files.length > 0) {
+            let file = image.files[0];
+            let maxSize = 300 * 1024; // 300KB
+
+            if (file.size > maxSize) {
+                document.getElementById("imageError").textContent = "Image must be less than 300KB.";
+                image.classList.add("is-invalid");
+                isValid = false;
+            }
         }
 
         return isValid;

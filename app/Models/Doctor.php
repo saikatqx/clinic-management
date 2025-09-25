@@ -23,6 +23,7 @@ class Doctor extends Model
         'is_active',
     ];
 
+
     /**
      * Relationship: Doctor belongs to a Specialty
      */

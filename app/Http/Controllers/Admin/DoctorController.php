@@ -32,15 +32,51 @@ class DoctorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // 🔹 Validation
+        $request->validate([
+            'name'          => 'required|string|max:255',
+            'specialty_id'  => 'required|exists:specialties,id',
+            'email'         => 'required|email|unique:doctors,email',
+            'phone'         => 'nullable|string|max:15|unique:doctors,phone',
+            'qualification' => 'nullable|string|max:255',
+            'bio'           => 'nullable|string',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:300', // 300 KB
+            'is_active'     => 'required|boolean',
+        ]);
+
+        // 🔹 Handle file upload
+        $imageName = null;
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/doctors'), $imageName);
+        }
+
+        // 🔹 Save Doctor
+        Doctor::create([
+            'name'          => $request->name,
+            'specialty_id'  => $request->specialty_id,
+            'email'         => $request->email,
+            'phone'         => $request->phone,
+            'qualification' => $request->qualification,
+            'bio'           => $request->bio,
+            'profile_image' => $imageName,
+            'is_active'     => $request->is_active,
+        ]);
+
+        // 🔹 Redirect with success
+        return redirect()->route('admin.doctors.index')
+            ->with('success', 'Doctor created successfully.');
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        $doctor = Doctor::findOrFail($id);
+        return view('admin.doctors.show', compact('doctor'));
     }
 
     /**
@@ -48,7 +84,9 @@ class DoctorController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $doctor = Doctor::findOrFail($id);
+        $specialties = Specialty::select('id', 'name')->get();
+        return view('admin.doctors.create', compact('doctor', 'specialties'));
     }
 
     /**
@@ -56,16 +94,75 @@ class DoctorController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // 🔹 Find doctor
+        $doctor = Doctor::findOrFail($id);
+
+        // 🔹 Validation
+        $request->validate([
+            'name'          => 'required|string|max:255',
+            'specialty_id'  => 'required|exists:specialties,id',
+            'email'         => 'required|email|unique:doctors,email,' . $doctor->id,
+            'phone'         => 'nullable|string|max:15',
+            'qualification' => 'nullable|string|max:255',
+            'bio'           => 'nullable|string',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:300', // 300 KB
+            'is_active'     => 'required|boolean',
+        ]);
+
+        // 🔹 Handle file upload (replace old image if new one is uploaded)
+        if ($request->hasFile('profile_image')) {
+            // Delete old image if exists
+            if ($doctor->profile_image && file_exists(public_path('images/doctors/' . $doctor->profile_image))) {
+                unlink(public_path('images/doctors/' . $doctor->profile_image));
+            }
+
+            $image = $request->file('profile_image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/doctors'), $imageName);
+
+            $doctor->profile_image = $imageName;
+        }
+
+        // 🔹 Update other fields
+        $doctor->update([
+            'name'          => $request->name,
+            'specialty_id'  => $request->specialty_id,
+            'email'         => $request->email,
+            'phone'         => $request->phone,
+            'qualification' => $request->qualification,
+            'bio'           => $request->bio,
+            'is_active'     => $request->is_active,
+            'profile_image' => $doctor->profile_image, // keep existing if no new file
+        ]);
+
+        // 🔹 Redirect with success
+        return redirect()->route('admin.doctors.index')
+            ->with('success', 'Doctor updated successfully.');
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy(string $id)
     {
-        //
+        // Find doctor by ID
+        $doctor = Doctor::findOrFail($id);
+
+        // If profile image exists, delete it from storage
+        if ($doctor->profile_image && file_exists(public_path('images/doctors/' . $doctor->profile_image))) {
+            unlink(public_path('images/doctors/' . $doctor->profile_image));
+        }
+
+        // Delete doctor
+        $doctor->delete();
+
+        // Redirect back with success message
+        return redirect()->route('admin.doctors.index')
+            ->with('success', 'Doctor deleted successfully!');
     }
+
 
     public function data(Request $request)
     {
