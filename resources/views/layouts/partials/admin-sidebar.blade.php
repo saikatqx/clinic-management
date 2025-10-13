@@ -20,13 +20,13 @@
         </div>
     </div> -->
     <a href="{{ route('admin.specialties.index') }}"
-    class="{{ request()->routeIs('admin.specialties.*') ? 'active' : '' }}">
-    🩺 Specialties
+        class="{{ request()->routeIs('admin.specialties.*') ? 'active' : '' }}">
+        🩺 Specialties
     </a>
 
     <a href="{{ route('admin.doctors.index') }}"
-    class="{{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}">
-    👨‍⚕️ Doctors
+        class="{{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}">
+        👨‍⚕️ Doctors
     </a>
 
     <a href="{{ route('admin.services.index') }}"
@@ -34,8 +34,20 @@
         📋 Services
     </a>
 
-    {{--<a href="{{ route('admin.appointments.index') }}"
+    <a href="{{ route('admin.appointments.index') }}"
         class="{{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}">
         📅 Appointments
-    </a>--}}
+    </a>
+
+    <a href="{{ route('admin.banners.index') }}"
+        class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
+        🖼️ Banners
+    </a>
+
+    <a href="{{ route('admin.settings.index') }}"
+        class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+        ⚙️ Settings
+    </a>
+
+
 </div>
