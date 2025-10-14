@@ -8,11 +8,16 @@ class Setting extends Model
 {
     protected $fillable = [
         'clinic_name',
+        'email',
+        'mobile',
+        'address',
+        'location_link',
+        'top_notice',
         'favicon',
         'clinic_logo',
-        'address',
-        'mobile',
-        'email',
-        'location_link',
+        'facebook',
+        'instagram',
+        'youtube',
+        'linkedin',
     ];
 }

@@ -37,7 +37,7 @@ class BannerController extends Controller
             'button_link' => 'nullable|url|max:255',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:512', // 512 KB max
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:512', // 512 KB max
         ]);
 
         // 🔹 Handle Image Upload
@@ -81,7 +81,7 @@ class BannerController extends Controller
             'button_link' => 'nullable|url|max:255',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:512',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:512',
         ]);
 
         $data = $request->only([

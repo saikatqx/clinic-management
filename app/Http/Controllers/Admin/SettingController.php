@@ -10,47 +10,80 @@ class SettingController extends Controller
 {
     public function index()
     {
+        // Always work with a single row
         $setting = Setting::first();
         return view('admin.settings.index', compact('setting'));
     }
 
     public function update(Request $request)
     {
-        $request->validate([
-            'clinic_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'mobile' => 'nullable|string|max:20',
-            'favicon' => 'nullable|image|mimes:png,ico|max:512',
-            'clinic_logo' => 'nullable|image|mimes:jpg,jpeg,png|max:1024',
+        // Validate all fields you have on the page
+        $validated = $request->validate([
+            'clinic_name'      => 'required|string|max:255',
+            'email'            => 'nullable|email|max:255',
+            'mobile'           => 'nullable|string|max:20',
+            'address'          => 'nullable|string|max:255',
+            'location_link'    => 'nullable|url|max:2048',
+
+            // Socials
+            'facebook_url'     => 'nullable|url|max:2048',
+            'instagram_url'    => 'nullable|url|max:2048',
+            'youtube_url'      => 'nullable|url|max:2048',
+            'linkedin_url'     => 'nullable|url|max:2048',
+
+            // Files
+            'favicon'          => 'nullable|image|mimes:png,jpg,jpeg,ico|max:512',   // 512 KB
+            'clinic_logo'      => 'nullable|image|mimes:jpg,jpeg,png,svg|max:1024', // 1 MB
         ]);
 
-        $setting = Setting::firstOrNew();
+        // Ensure we always update the first (and only) settings row
+        $setting = Setting::first() ?? new Setting();
 
-        $data = $request->only(['clinic_name', 'address', 'mobile', 'email', 'location_link']);
+        // Prepare mass-assignable fields
+        $data = [
+            'clinic_name'     => $validated['clinic_name'],
+            'email'           => $validated['email'] ?? null,
+            'mobile'          => $validated['mobile'] ?? null,
+            'address'         => $validated['address'] ?? null,
+            'location_link'   => $validated['location_link'] ?? null,
 
-        // Favicon
+            // Socials
+            'facebook'    => $validated['facebook_url'] ?? null,
+            'instagram'   => $validated['instagram_url'] ?? null,
+            'youtube'     => $validated['youtube_url'] ?? null,
+            'linkedin'    => $validated['linkedin_url'] ?? null,
+        ];
+
+        // Uploads directory
+        $dir = public_path('images/settings');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+
+        // Handle favicon upload (delete old file if present)
         if ($request->hasFile('favicon')) {
-            if ($setting->favicon && file_exists(public_path('images/settings/' . $setting->favicon))) {
-                unlink(public_path('images/settings/' . $setting->favicon));
+            if (!empty($setting->favicon) && file_exists($dir . '/' . $setting->favicon)) {
+                @unlink($dir . '/' . $setting->favicon);
             }
-            $faviconName = time() . '_favicon.' . $request->favicon->extension();
-            $request->favicon->move(public_path('images/settings'), $faviconName);
+            $faviconName = time() . '_favicon.' . $request->file('favicon')->extension();
+            $request->file('favicon')->move($dir, $faviconName);
             $data['favicon'] = $faviconName;
         }
 
-        // Logo
+        // Handle logo upload (delete old file if present)
         if ($request->hasFile('clinic_logo')) {
-            if ($setting->clinic_logo && file_exists(public_path('images/settings/' . $setting->clinic_logo))) {
-                unlink(public_path('images/settings/' . $setting->clinic_logo));
+            if (!empty($setting->clinic_logo) && file_exists($dir . '/' . $setting->clinic_logo)) {
+                @unlink($dir . '/' . $setting->clinic_logo);
             }
-            $logoName = time() . '_logo.' . $request->clinic_logo->extension();
-            $request->clinic_logo->move(public_path('images/settings'), $logoName);
+            $logoName = time() . '_logo.' . $request->file('clinic_logo')->extension();
+            $request->file('clinic_logo')->move($dir, $logoName);
             $data['clinic_logo'] = $logoName;
         }
 
-        $setting->updateOrCreate(['id' => $setting->id ?? 1], $data);
+        // Save (create vs update)
+        $setting->fill($data);
+        $setting->save();
 
-        return redirect()->back()->with('success', 'Settings updated successfully!');
+        return back()->with('success', 'Settings updated successfully!');
     }
 }
-

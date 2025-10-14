@@ -25,6 +25,9 @@ Route::get('/admin', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/doctors-by-specialty/{id}', [HomeController::class, 'getBySpecialty'])
+    ->name('doctors.bySpecialty');
+
 Route::get('/services', [ServiceFrontController::class, 'index'])->name('services.index.public');
 Route::get('/services/{service:slug}', [ServiceFrontController::class, 'show'])->name('services.show.public');
 
