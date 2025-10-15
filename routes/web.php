@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ServiceFrontController;
+use App\Http\Controllers\Public\DoctorFrontController;
+use App\Http\Controllers\Public\ContactController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,7 +31,7 @@ Route::get('/doctors-by-specialty/{id}', [HomeController::class, 'getBySpecialty
     ->name('doctors.bySpecialty');
 
 Route::get('/services', [ServiceFrontController::class, 'index'])->name('services.index.public');
-Route::get('/services/{service:slug}', [ServiceFrontController::class, 'show'])->name('services.show.public');
+Route::get('/services/{id}', [ServiceFrontController::class, 'show'])->name('services.show.public');
 
 Route::get('/doctors', [DoctorFrontController::class, 'index'])->name('doctors.index.public');
 Route::get('/doctors/{doctor}', [DoctorFrontController::class, 'show'])->name('doctors.show.public');
@@ -40,7 +42,7 @@ Route::post('/appointment', [AppointmentFrontController::class, 'store'])->name(
 // Ajax slots (optional simple generator)
 Route::get('/appointment/slots', [AppointmentFrontController::class, 'slots'])->name('appointments.slots');
 
-Route::view('/contact', 'frontend.contact')->name('contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
 Route::middleware(['auth', 'verified'])
     ->prefix('admin')

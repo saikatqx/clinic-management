@@ -209,6 +209,22 @@
       error ') }}');
   </script>
   @endif
+  <script>
+  // quick sanity check in console: should print "function"
+  // console.log(typeof $.fn.select2);
+
+  $(function () {
+    $('.select2').each(function(){
+      $(this).select2({
+        theme: 'bootstrap-5',                  // pretty with Bootstrap 5
+        width: '100%',
+        placeholder: $(this).data('placeholder') || 'Select an option',
+        allowClear: true
+      });
+    });
+  });
+</script>
+
 
   @stack('scripts')
 </body>
