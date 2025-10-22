@@ -166,6 +166,9 @@
           <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('appointments.status') ? 'active' : '' }}" href="{{ route('appointments.status') }}">Appointment Status</a>
+          </li>
           <li class="nav-item ms-lg-3">
             <a href="{{ route('doctors.index.public') }}" class="btn btn-primary">Book Appointment</a>
           </li>

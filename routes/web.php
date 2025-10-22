@@ -43,6 +43,11 @@ Route::resource('appointments', AppointmentFrontController::class)->names([
     'store' => 'appointments.store.public',
     'show' => 'appointments.show.public',
 ]);
+Route::get('/appointment/status', [AppointmentFrontController::class, 'status'])->name('appointments.status');
+Route::post('/appointment/status', [AppointmentFrontController::class, 'checkStatus'])->name('appointments.status.check');
+
+Route::get('/appointments/{id}/prescription', [AppointmentFrontController::class, 'downloadPrescription'])
+     ->name('appointments.prescription.download');
 
 // Ajax slots (optional simple generator)
 Route::get('/appointment/slots', [AppointmentFrontController::class, 'slots'])->name('appointments.slots');
@@ -79,6 +84,12 @@ Route::middleware(['auth', 'verified'])
         Route::resource('appointments', AppointmentController::class);
         Route::get('appointments-data', [AppointmentController::class, 'data'])->name('appointments.data');
         Route::post('appointments/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
+
+        Route::get('appointments/{id}/prescription', [AppointmentController::class, 'createPrescription'])->name('appointments.prescription');
+
+
+        Route::post('appointments/{id}/prescription', [AppointmentController::class, 'storePrescription'])
+            ->name('appointments.prescription.store');
 
         // ✅ Fix: define custom routes before resource
         Route::get('banners/data', [BannerController::class, 'data'])->name('banners.data');

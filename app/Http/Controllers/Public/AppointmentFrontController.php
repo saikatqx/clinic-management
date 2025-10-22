@@ -82,4 +82,31 @@ class AppointmentFrontController extends Controller
     {
         //
     }
+    public function status()
+    {
+        return view('frontend.appointment.status');
+    }
+
+    // Handle form submission and display result
+    public function checkStatus(Request $request)
+    {
+        $request->validate([
+            'appointment_no' => 'required'
+        ]);
+
+        $appointment = Appointment::where('id', $request->appointment_no)->first();
+
+        if (!$appointment) {
+            return back()->with('error', 'No appointment found with this number.');
+        }
+
+        return view('frontend.appointment.status', compact('appointment'));
+    }
+    public function downloadPrescription($id)
+    {
+        $appt = Appointment::findOrFail($id);
+        abort_unless($appt->prescription_file && file_exists(public_path('prescriptions/' . $appt->prescription_file)), 404);
+
+        return response()->download(public_path('prescriptions/' . $appt->prescription_file));
+    }
 }
