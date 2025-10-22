@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clinic Admin - @yield('title')</title>
 
+    @if(!empty($settings?->favicon))
+    <link rel="icon" href="{{ asset('images/settings/'.$settings->favicon) }}">
+    @endif
+
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 

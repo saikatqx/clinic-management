@@ -121,7 +121,7 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 mt-4 mb-3">
-              <a href="{{ route('appointments.create.public', ['service' => $service->id]) }}" class="btn btn-danger">
+              <a href="{{ route('doctors.index.public') }}" class="btn btn-danger">
                 <i class="fas fa-calendar-check me-1"></i> Book Appointment
               </a>
               <a href="{{ route('services.index.public') }}" class="btn btn-outline-secondary back-link">
@@ -144,7 +144,7 @@
               <span class="text-secondary small">Check available doctors & time slots.</span>
             </div>
           </div>
-          <a href="{{ route('appointments.create.public', ['service' => $service->id]) }}" class="btn btn-danger w-100 mt-3">
+          <a href="{{ route('doctors.index.public') }}" class="btn btn-danger w-100 mt-3">
             Book Appointment
           </a>
         </div>

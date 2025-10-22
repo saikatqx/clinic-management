@@ -84,7 +84,7 @@
           <div class="card-body">
             <h5>{{ $service->name }}</h5>
             <p class="text-muted">{{ Str::limit(strip_tags($service->description), 80) }}</p>
-            <a href="" class="btn btn-outline-danger btn-sm">Read More</a>
+            <a href="{{ route('services.show.public',$service->id) }}" class="btn btn-outline-danger btn-sm">Read More</a>
           </div>
         </div>
       </div>

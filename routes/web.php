@@ -12,6 +12,7 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ServiceFrontController;
 use App\Http\Controllers\Public\DoctorFrontController;
 use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Public\AppointmentFrontController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,8 +37,12 @@ Route::get('/services/{id}', [ServiceFrontController::class, 'show'])->name('ser
 Route::get('/doctors', [DoctorFrontController::class, 'index'])->name('doctors.index.public');
 Route::get('/doctors/{doctor}', [DoctorFrontController::class, 'show'])->name('doctors.show.public');
 
-Route::get('/appointment', [AppointmentFrontController::class, 'create'])->name('appointments.create.public');
-Route::post('/appointment', [AppointmentFrontController::class, 'store'])->name('appointments.store.public');
+Route::resource('appointments', AppointmentFrontController::class)->names([
+    'index' => 'appointments.index.public',
+    // 'create' => 'appointments.create.public',
+    'store' => 'appointments.store.public',
+    'show' => 'appointments.show.public',
+]);
 
 // Ajax slots (optional simple generator)
 Route::get('/appointment/slots', [AppointmentFrontController::class, 'slots'])->name('appointments.slots');

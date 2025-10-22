@@ -162,7 +162,7 @@
               <h5>Need an appointment?</h5>
               <div class="opacity-75">Pick a doctor and time that works for you in seconds.</div>
             </div>
-            <a href="{{ route('appointments.create.public') }}" class="btn btn-white">Book Now</a>
+            <a href="{{ route('doctors.index.public') }}" class="btn btn-white">Book Now</a>
           </div>
 
         </div>

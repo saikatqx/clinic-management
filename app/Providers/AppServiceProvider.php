@@ -21,7 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer(['frontend.layout'], function ($view) {
+        // Always fetch from DB on every view load (no cache)
+        View::composer(['frontend.layout', 'layouts.admin'], function ($view) {
             $view->with('settings', Setting::first());
         });
     }
