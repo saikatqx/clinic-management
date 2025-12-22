@@ -75,9 +75,14 @@
   {{-- 24 × 7 / notice bar --}}
   <div class="notice-bar py-2">
     <div class="container d-flex flex-wrap justify-content-center justify-content-md-between align-items-center">
-      <div class="mb-1 mb-md-0 fw-semibold">
+      {{-- <div class="mb-1 mb-md-0 fw-semibold">
         {{ $settings->top_notice ?? '24 x 7 Dialysis Center at DAMA Hospital' }}
+      </div> --}}
+      <div class="mb-1 mb-md-0 fw-semibold">
+          <span class="fs-2">{{ $settings->top_notice ?? 'MediBook' }}</span><br>
+          <span class="fs-5">{{ $settings->clinic_name ?? 'Clinic' }}</span>
       </div>
+
       <div class="d-none d-md-block">
         <span class="me-3">
           <i class="fa-solid fa-phone"></i>
