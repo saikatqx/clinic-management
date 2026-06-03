@@ -1,0 +1,91 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: clinic_test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, bcmath, json, mysql, pdo_mysql
+        coverage: xdebug
+
+    - name: Copy .env
+      run: cp .env.example .env.testing
+
+    - name: Install dependencies
+      run: |
+        composer install --no-progress --prefer-dist
+        npm install
+
+    - name: Generate application key
+      run: php artisan key:generate --env=testing
+
+    - name: Run migrations
+      run: php artisan migrate --env=testing
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: clinic_test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+
+    - name: Run Pest tests
+      run: php artisan pest --coverage
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: clinic_test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: always()
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    - name: Install dependencies
+      run: composer install --no-progress --prefer-dist
+
+    - name: Run PHPStan
+      run: php artisan ide-helper:generate && php vendor/bin/phpstan analyse
+      continue-on-error: true
+
+    - name: Check PHP syntax
+      run: php -l $(find app -name "*.php")

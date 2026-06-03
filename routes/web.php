@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AvailabilityController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ServiceFrontController;
 use App\Http\Controllers\Public\DoctorFrontController;
@@ -96,6 +97,11 @@ Route::middleware(['auth', 'verified'])
         Route::post('banners/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggleStatus');
         Route::resource('banners', BannerController::class);
 
+        // Doctor Availabilities
+        Route::get('availabilities/data', [AvailabilityController::class, 'data'])->name('availabilities.data');
+        Route::post('availabilities', [AvailabilityController::class, 'store'])->name('availabilities.store');
+        Route::delete('availabilities/{id}', [AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
+        Route::get('availabilities', [AvailabilityController::class, 'index'])->name('availabilities.index');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings/update', [SettingController::class, 'update'])->name('settings.update');

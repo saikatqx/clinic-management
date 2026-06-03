@@ -29,6 +29,11 @@
         👨‍⚕️ Doctors
     </a>
 
+    <a href="{{ route('admin.availabilities.index') }}"
+        class="{{ request()->routeIs('admin.availabilities.*') ? 'active' : '' }}">
+        ⏰ Availabilities
+    </a>
+
     <a href="{{ route('admin.services.index') }}"
         class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
         📋 Services

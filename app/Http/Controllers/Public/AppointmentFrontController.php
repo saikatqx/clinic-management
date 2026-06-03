@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
+use App\Models\Doctor;
+use Carbon\Carbon;
 
 class AppointmentFrontController extends Controller
 {
@@ -38,7 +40,16 @@ class AppointmentFrontController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Appointment::create([
+        // Prevent double-booking for exact datetime for the same doctor
+        $exists = Appointment::where('doctor_id', $request->doctor_id)
+            ->where('appointment_date', $request->appointment_date)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'The selected time is already booked. Please choose another slot.'], 409);
+        }
+
+        $appt = Appointment::create([
             'doctor_id' => $request->doctor_id,
             'patient_name' => $request->patient_name,
             'patient_email' => $request->patient_email,
@@ -48,7 +59,7 @@ class AppointmentFrontController extends Controller
             'status' => 'Pending',
         ]);
 
-        return response()->json(['message' => 'Appointment booked successfully!']);
+        return response()->json(['message' => 'Appointment booked successfully!', 'appointment_id' => $appt->id]);
     }
 
     /**
@@ -108,5 +119,55 @@ class AppointmentFrontController extends Controller
         abort_unless($appt->prescription_file && file_exists(public_path('prescriptions/' . $appt->prescription_file)), 404);
 
         return response()->download(public_path('prescriptions/' . $appt->prescription_file));
+    }
+
+    /**
+     * Return available slots for a doctor on a given date.
+     * Expects `doctor_id` and `date` (Y-m-d).
+     */
+    public function slots(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'required|exists:doctors,id',
+            'date' => 'required|date',
+        ]);
+
+        $doctor = Doctor::with('availabilities')->findOrFail($request->doctor_id);
+        $date = Carbon::parse($request->date);
+        $dayOfWeek = $date->dayOfWeek; // 0 (Sunday) - 6 (Saturday)
+
+        $availabilities = $doctor->availabilities()->where('day_of_week', $dayOfWeek)->get();
+
+        if ($availabilities->isEmpty()) {
+            return response()->json(['slots' => []]);
+        }
+
+        $existing = Appointment::where('doctor_id', $doctor->id)
+            ->whereDate('appointment_date', $date->toDateString())
+            ->get()
+            ->map(fn($a) => Carbon::parse($a->appointment_date)->format('Y-m-d H:i'))
+            ->toArray();
+
+        $slots = [];
+
+        foreach ($availabilities as $av) {
+            $start = Carbon::createFromFormat('H:i', $av->start_time)
+                ->setDate($date->year, $date->month, $date->day);
+            $end = Carbon::createFromFormat('H:i', $av->end_time)
+                ->setDate($date->year, $date->month, $date->day);
+
+            while ($start->lt($end)) {
+                $slotKey = $start->format('Y-m-d H:i');
+                if (! in_array($slotKey, $existing)) {
+                    $slots[] = [
+                        'datetime' => $start->format('Y-m-d H:i:s'),
+                        'time' => $start->format('h:i A')
+                    ];
+                }
+                $start->addMinutes($av->slot_minutes);
+            }
+        }
+
+        return response()->json(['slots' => $slots]);
     }
 }
