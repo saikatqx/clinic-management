@@ -14,6 +14,7 @@ use App\Http\Controllers\Public\ServiceFrontController;
 use App\Http\Controllers\Public\DoctorFrontController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\AppointmentFrontController;
+use App\Http\Controllers\Frontend\ChatBotController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,9 @@ Route::get('/admin', function () {
 });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/chatbot', [ChatBotController::class, 'index'])->name('chatbot.index');
+Route::post('/chatbot/message', [ChatBotController::class, 'send'])
+    ->name('chatbot.send');
 
 Route::get('/doctors-by-specialty/{id}', [HomeController::class, 'getBySpecialty'])
     ->name('doctors.bySpecialty');

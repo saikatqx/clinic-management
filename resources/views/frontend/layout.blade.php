@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $settings->clinic_name ?? 'Clinic' }} | @yield('title')</title>
 
   @if(!empty($settings?->favicon))
@@ -65,6 +66,113 @@
     .nav-link:hover {
       color: #0d6efd !important;
       font-weight: 600
+    }
+
+    /* Chatbot widget */
+    .chat-widget {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 1100;
+      width: 340px;
+      max-width: calc(100% - 1rem);
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    .chat-widget .chat-toggle {
+      border-radius: 50px;
+      background: #0d6efd;
+      color: #fff;
+      border: none;
+      padding: 0.9rem 1.1rem;
+      box-shadow: 0 10px 30px rgba(13, 110, 253, .2);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chat-widget .chat-panel {
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .12);
+      overflow: hidden;
+      margin-top: 0.75rem;
+      display: none;
+      flex-direction: column;
+      border: 1px solid #e9ecef;
+      height: 440px;
+    }
+
+    .chat-widget .chat-panel.active {
+      display: flex;
+    }
+
+    .chat-widget .chat-header {
+      background: #0d6efd;
+      color: #fff;
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .chat-widget .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      background: #f8f9fa;
+      min-height: 220px;
+    }
+
+    .chat-widget .chat-message {
+      margin-bottom: 0.9rem;
+      line-height: 1.5;
+      max-width: 85%;
+      padding: 0.8rem 1rem;
+      border-radius: 18px;
+      word-break: break-word;
+    }
+
+    .chat-widget .chat-message.user {
+      margin-left: auto;
+      background: #0d6efd;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-widget .chat-message.bot {
+      margin-right: auto;
+      background: #fff;
+      border: 1px solid #dee2e6;
+      color: #212529;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-widget .chat-form {
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: #fff;
+    }
+
+    .chat-widget .chat-form input {
+      flex: 1;
+      border: 1px solid #ced4da;
+      border-radius: 999px;
+      padding: 0.75rem 1rem;
+      outline: none;
+    }
+
+    .chat-widget .chat-form button {
+      border-radius: 999px;
+      background: #0d6efd;
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1rem;
+      min-width: 95px;
     }
   </style>
   @stack('head')
@@ -172,6 +280,9 @@
             <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('chatbot.index') ? 'active' : '' }}" href="{{ route('chatbot.index') }}">Health Chat</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('appointments.status') ? 'active' : '' }}" href="{{ route('appointments.status') }}">Appointment Status</a>
           </li>
           <li class="nav-item ms-lg-3">
@@ -192,7 +303,39 @@
     </div>
   </footer>
 
+  @unless(request()->routeIs('chatbot.index'))
+  <div class="chat-widget">
+    <button id="chat-toggle" class="chat-toggle">
+      <i class="fa-solid fa-comments"></i>
+      Health Chat
+    </button>
+
+    <div id="chat-panel" class="chat-panel" aria-hidden="true">
+      <div class="chat-header">
+        <div>
+          <strong>Health Chatbot</strong>
+          <div class="small">Ask any health-related or clinic question.</div>
+        </div>
+        <button id="chat-close" type="button" class="btn btn-sm btn-light text-dark" aria-label="Close chat">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Type your question..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+  @endunless
+
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    if (window.axios && document.querySelector('meta[name="csrf-token"]')) {
+      window.axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    }
+  </script>
   <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
   <!-- Include Select2 JS -->
@@ -242,6 +385,65 @@
   });
 </script>
 
+  <script>
+    $(function () {
+      const $toggle = $('#chat-toggle');
+      const $panel = $('#chat-panel');
+      const $close = $('#chat-close');
+      const $messages = $('#chat-messages');
+      const $input = $('#chat-input');
+      const $form = $('#chat-form');
+
+      const chatRoute = '{{ route('chatbot.send') }}';
+
+      function addChatMessage(type, text) {
+        const message = $('<div>').addClass('chat-message ' + type).text(text);
+        $messages.append(message);
+        $messages.scrollTop($messages[0].scrollHeight);
+      }
+
+      function setPanelVisible(visible) {
+        if (visible) {
+          $panel.addClass('active');
+          $panel.attr('aria-hidden', 'false');
+          $input.focus();
+        } else {
+          $panel.removeClass('active');
+          $panel.attr('aria-hidden', 'true');
+        }
+      }
+
+      $toggle.on('click', function () {
+        setPanelVisible(!$panel.hasClass('active'));
+      });
+
+      $close.on('click', function () {
+        setPanelVisible(false);
+      });
+
+      $form.on('submit', function (event) {
+        event.preventDefault();
+        const text = $input.val().trim();
+        if (!text) {
+          return;
+        }
+
+        addChatMessage('user', text);
+        $input.val('');
+        addChatMessage('bot', 'Thinking...');
+
+        axios.post(chatRoute, { message: text })
+          .then(function (response) {
+            const botText = response.data.message || 'Sorry, I could not retrieve an answer.';
+            $messages.find('.chat-message.bot').last().text(botText);
+          })
+          .catch(function (error) {
+            const errorMessage = error.response?.data?.message || 'Unable to reach the chat service.';
+            $messages.find('.chat-message.bot').last().text(errorMessage);
+          });
+      });
+    });
+  </script>
 
   @stack('scripts')
 </body>
