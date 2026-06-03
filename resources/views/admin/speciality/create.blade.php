@@ -42,7 +42,7 @@
         <!-- Status -->
         <div class="mb-3">
             <label class="form-label fw-bold">Status</label>
-            <select name="is_active" class="form-select">
+            <select name="is_active" class="form-select select2">
                 <option value="1"
                     {{ (isset($specialty) ? $specialty->is_active : old('is_active', 1)) == 1 ? 'selected' : '' }}>
                     Active

@@ -200,7 +200,16 @@
   <!-- jQuery (already loaded if you’re using DataTables) -->
   <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+  <!-- Select2 Initialization -->
+  <script>
+    $(document).ready(function() {
+      $('.select2').select2({
+        width: '100%',
+        placeholder: 'Search and select...',
+        allowClear: true
+      });
+    });
+  </script>
   @if(session('success'))
   <script>
     toastr.success('{{ session('

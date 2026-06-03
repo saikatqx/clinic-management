@@ -354,8 +354,18 @@
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Include Select2 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
-    <!-- jQuery (already loaded if you’re using DataTables) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>    
+    <!-- Select2 Initialization -->
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                width: '100%',
+                allowClear: true,
+                placeholder: 'Search and select...'
+            });
+        });
+    </script>
+        <!-- jQuery (already loaded if you’re using DataTables) -->
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
     @if(session('success'))

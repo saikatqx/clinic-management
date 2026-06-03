@@ -33,7 +33,7 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label for="doctor_id" class="form-label">Doctor</label>
-                        <select id="doctor_id" name="doctor_id" class="form-control" required>
+                        <select id="doctor_id" name="doctor_id" class="form-control select2" required>
                             <option value="">-- Select Doctor --</option>
                             @foreach ($doctors as $doctor)
                                 <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
@@ -43,7 +43,7 @@
 
                     <div class="col-md-3">
                         <label for="day_of_week" class="form-label">Day</label>
-                        <select id="day_of_week" name="day_of_week" class="form-control" required>
+                        <select id="day_of_week" name="day_of_week" class="form-control select2" required>
                             <option value="">-- Select Day --</option>
                             <option value="0">Sunday</option>
                             <option value="1">Monday</option>
@@ -67,7 +67,7 @@
 
                     <div class="col-md-2">
                         <label for="slot_minutes" class="form-label">Slot (min)</label>
-                        <select id="slot_minutes" name="slot_minutes" class="form-control">
+                        <select id="slot_minutes" name="slot_minutes" class="form-control select2">
                             <option value="15">15 min</option>
                             <option value="30" selected>30 min</option>
                             <option value="45">45 min</option>
