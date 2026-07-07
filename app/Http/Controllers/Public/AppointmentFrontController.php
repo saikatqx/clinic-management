@@ -192,9 +192,9 @@ class AppointmentFrontController extends Controller
         $slots = [];
 
         foreach ($availabilities as $av) {
-            $start = Carbon::createFromFormat('H:i', $av->start_time)
+            $start = Carbon::parse($av->start_time)
                 ->setDate($date->year, $date->month, $date->day);
-            $end = Carbon::createFromFormat('H:i', $av->end_time)
+            $end = Carbon::parse($av->end_time)
                 ->setDate($date->year, $date->month, $date->day);
 
             while ($start->lt($end)) {

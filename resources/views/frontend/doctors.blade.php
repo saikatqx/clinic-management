@@ -123,8 +123,17 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Appointment Date & Time</label>
-              <input type="datetime-local" name="appointment_date" class="form-control" required>
+              <label class="form-label fw-semibold">Appointment Date</label>
+              <input type="date" id="booking_date" class="form-control" required min="{{ date('Y-m-d') }}">
+            </div>
+
+            <input type="hidden" name="appointment_date" id="appointment_date">
+
+            <div class="col-12 mt-2 text-start">
+              <label class="form-label fw-semibold d-block">Available Time Slots</label>
+              <div id="slots_container" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border">
+                <span class="text-muted small">Please select a date first to view available time slots.</span>
+              </div>
             </div>
 
             <div class="col-12">
@@ -134,7 +143,7 @@
 
             <div class="col-12 mt-2">
               <div class="p-3 bg-light rounded-3 border text-start">
-                <h6 class="text-success mb-2"><i class="fa fa-credit-card me-1"></i> Pay Consultation Fee ($50.00)</h6>
+                <h6 class="text-success mb-2"><i class="fa fa-credit-card me-1"></i> Pay Consultation Fee (₹500.00)</h6>
                 <div class="row g-2">
                   <div class="col-md-6">
                     <input type="text" class="form-control form-control-sm" placeholder="Card Number" value="4242 4242 4242 4242" disabled>
@@ -150,7 +159,7 @@
                 <div class="form-check mt-2">
                   <input class="form-check-input" type="checkbox" name="pay_now" id="pay_now" value="1" checked>
                   <label class="form-check-label small fw-semibold text-dark" for="pay_now">
-                    Authorize immediate payment charge of $50.00
+                    Authorize immediate payment charge of ₹500.00
                   </label>
                 </div>
               </div>
@@ -243,12 +252,20 @@
 
       $('#doctor_id').val(doctorId);
       $('#appointmentModalLabel').text(`Book Appointment with Dr. ${doctorName}`);
+      $('#booking_date').val('');
+      $('#appointment_date').val('');
+      $('#slots_container').html('<span class="text-muted small">Please select a date first to view available time slots.</span>');
       $('#appointmentModal').modal('show');
     });
 
     // Handle form submit via AJAX
     $('#appointmentForm').on('submit', function(e) {
       e.preventDefault();
+
+      if (!$('#appointment_date').val()) {
+        toastr.error('Please select an available time slot.');
+        return;
+      }
 
       $.ajax({
         url: "{{ route('appointments.store.public') }}",
@@ -258,12 +275,60 @@
           $('#appointmentModal').modal('hide');
           toastr.success('Appointment booked successfully!');
           $('#appointmentForm')[0].reset();
+          $('#appointment_date').val('');
         },
         error: function(xhr) {
           console.error(xhr.responseText);
-          toastr.error('Something went wrong. Please try again.');
+          const errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Something went wrong. Please try again.';
+          toastr.error(errorMsg);
         }
       });
+    });
+
+    // When Date changes → load slots via AJAX
+    $(document).on('change', '#booking_date', function() {
+      const date = $(this).val();
+      const doctorId = $('#doctor_id').val();
+      const $container = $('#slots_container');
+
+      if (!date || !doctorId) return;
+
+      $container.html('<span class="text-muted small"><i class="fa fa-spinner fa-spin me-1"></i> Loading slots...</span>');
+      $('#appointment_date').val('');
+
+      $.ajax({
+        url: "{{ route('appointments.slots') }}",
+        method: "GET",
+        data: {
+          doctor_id: doctorId,
+          date: date
+        },
+        success: function(res) {
+          $container.empty();
+          if (res.slots && res.slots.length > 0) {
+            res.slots.forEach(function(slot) {
+              $container.append(`
+                <button type="button" class="btn btn-outline-primary btn-sm slot-badge-btn" data-datetime="${slot.datetime}">
+                  ${slot.time}
+                </button>
+              `);
+            });
+          } else {
+            $container.html('<span class="text-danger small">No available slots for this day. Please select another date.</span>');
+          }
+        },
+        error: function(xhr) {
+          console.error(xhr.responseText);
+          $container.html('<span class="text-danger small">Error loading slots. Please try again.</span>');
+        }
+      });
+    });
+
+    // When clicking a slot badge
+    $(document).on('click', '.slot-badge-btn', function() {
+      $('.slot-badge-btn').removeClass('btn-primary text-white').addClass('btn-outline-primary');
+      $(this).removeClass('btn-outline-primary').addClass('btn-primary text-white');
+      $('#appointment_date').val($(this).data('datetime'));
     });
 
     // Handle AI Triage Form Submit

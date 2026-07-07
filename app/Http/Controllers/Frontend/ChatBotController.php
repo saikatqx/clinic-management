@@ -100,10 +100,7 @@ class ChatBotController extends Controller
                     'body' => $response->body(),
                 ]);
 
-                $errorMessage = $response->json('error.message') ?? 'Chatbot request failed. Please try again later.';
-                return response()->json([
-                    'message' => $errorMessage,
-                ], $response->status() === 422 ? 422 : 500);
+                return $this->localChat($request->input('message'));
             }
 
             $content = $response->json('choices.0.message.content');
@@ -113,9 +110,7 @@ class ChatBotController extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return response()->json([
-                'message' => 'Unable to process your request at the moment.',
-            ], 500);
+            return $this->localChat($request->input('message'));
         }
     }
 
@@ -169,7 +164,11 @@ class ChatBotController extends Controller
             ]);
 
             if ($response->failed()) {
-                return response()->json(['message' => 'Triage service failed.'], 500);
+                Log::error('OpenAI triage request failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return $this->localTriage($request->input('symptoms'));
             }
 
             $matched = trim($response->json('choices.0.message.content'));
@@ -189,7 +188,99 @@ class ChatBotController extends Controller
             ]);
         } catch (\Exception $exception) {
             Log::error('OpenAI triage exception: ' . $exception->getMessage());
-            return response()->json(['message' => 'Unable to process request.'], 500);
+            return $this->localTriage($request->input('symptoms'));
         }
+    }
+
+    protected function localTriage(string $symptoms)
+    {
+        $specialties = Specialty::where('is_active', 1)->get();
+        if ($specialties->isEmpty()) {
+            return response()->json(['specialty' => null, 'specialty_id' => null]);
+        }
+
+        $symptomsLower = strtolower($symptoms);
+        
+        $matched = null;
+        foreach ($specialties as $spec) {
+            $name = strtolower($spec->name);
+            if (str_contains($symptomsLower, $name)) {
+                $matched = $spec;
+                break;
+            }
+        }
+
+        if (!$matched) {
+            $mappings = [
+                'cardio' => 'Cardiology',
+                'heart' => 'Cardiology',
+                'chest' => 'Cardiology',
+                
+                'child' => 'Pediatrics',
+                'kid' => 'Pediatrics',
+                'baby' => 'Pediatrics',
+                'pediatric' => 'Pediatrics',
+                
+                'teeth' => 'Dental',
+                'tooth' => 'Dental',
+                'dentist' => 'Dental',
+                
+                'skin' => 'Dermatology',
+                'rash' => 'Dermatology',
+                'acne' => 'Dermatology',
+            ];
+
+            foreach ($mappings as $keyword => $specName) {
+                if (str_contains($symptomsLower, $keyword)) {
+                    $matched = Specialty::where('name', 'like', '%' . $specName . '%')->first();
+                    if ($matched) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$matched) {
+            $matched = $specialties->first();
+        }
+
+        return response()->json([
+            'specialty' => $matched->name,
+            'specialty_id' => $matched->id,
+            'is_fallback' => true
+        ]);
+    }
+
+    protected function localChat(string $message)
+    {
+        $msgLower = strtolower($message);
+        
+        if (str_contains($msgLower, 'doctor') || str_contains($msgLower, 'physician')) {
+            $doctors = Doctor::where('is_active', 1)->with('specialty')->get();
+            $res = "Here are our active doctors:\n";
+            foreach ($doctors as $d) {
+                $res .= "- Dr. {$d->name} ({$d->specialty->name})\n";
+            }
+            return response()->json(['message' => $res]);
+        }
+
+        if (str_contains($msgLower, 'service') || str_contains($msgLower, 'offer')) {
+            $services = Service::where('is_active', 1)->get();
+            $res = "Here are our key services:\n";
+            foreach ($services as $s) {
+                $res .= "- {$s->name}\n";
+            }
+            return response()->json(['message' => $res]);
+        }
+
+        if (str_contains($msgLower, 'book') || str_contains($msgLower, 'appointment') || str_contains($msgLower, 'schedule')) {
+            return response()->json([
+                'message' => "To book, reschedule, or cancel appointments, please use the main navigation links or click the 'Book Appointment' button on the Doctors page."
+            ]);
+        }
+
+        return response()->json([
+            'message' => "Hello! I am the Arogya Clinic Assistant (running in offline local fallback mode). How can I help you today? You can ask about our doctors, services, or appointments."
+        ]);
     }
 }
