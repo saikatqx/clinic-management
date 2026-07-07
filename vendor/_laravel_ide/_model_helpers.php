@@ -12,6 +12,7 @@ namespace App\Models {
 	 * @property string|null $prescription_generated_at
 	 * @property string|null $confirmed_at
 	 * @property string|null $cancel_reason
+	 * @property string $payment_status
 	 * @property mixed $status
 	 * @property string $appointment_date
 	 * @property string|null $patient_phone
@@ -27,6 +28,7 @@ namespace App\Models {
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment wherePatientPhone($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment whereAppointmentDate($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment whereStatus($value)
+	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment wherePaymentStatus($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment whereCancelReason($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment whereConfirmedAt($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Appointment>|Appointment wherePrescriptionGeneratedAt($value)
