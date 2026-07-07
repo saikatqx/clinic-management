@@ -24,11 +24,16 @@ class AppointmentController extends Controller
 
         $data = [];
         foreach ($appointments as $a) {
+            $payBadge = match ($a->payment_status) {
+                'Paid' => '<span class="badge bg-success ms-1"><i class="fa fa-check-circle"></i> Paid</span>',
+                default => '<span class="badge bg-secondary ms-1"><i class="fa-solid fa-clock"></i> Unpaid</span>',
+            };
+
             $statusBadge = match ($a->status) {
                 'Confirmed' => '<span class="badge bg-success">Confirmed</span>',
                 'Cancelled' => '<span class="badge bg-danger">Cancelled</span>',
                 default => '<span class="badge bg-warning text-dark">Pending</span>',
-            };
+            } . $payBadge;
 
             $actions = '
                 <a href="' . route('admin.appointments.prescription', $a->id) . '" class="btn btn-info btn-sm">

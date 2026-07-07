@@ -87,6 +87,8 @@ class AppointmentFrontController extends Controller
             return response()->json(['message' => 'The selected time is already booked. Please choose another slot.'], 409);
         }
 
+        $paymentStatus = $request->input('pay_now') == '1' ? 'Paid' : 'Pending';
+
         $appt = Appointment::create([
             'doctor_id' => $request->doctor_id,
             'patient_name' => $request->patient_name,
@@ -95,6 +97,7 @@ class AppointmentFrontController extends Controller
             'appointment_date' => $request->appointment_date,
             'notes' => $request->notes,
             'status' => 'Pending',
+            'payment_status' => $paymentStatus,
         ]);
 
         return response()->json(['message' => 'Appointment booked successfully!', 'appointment_id' => $appt->id]);
@@ -197,10 +200,19 @@ class AppointmentFrontController extends Controller
             while ($start->lt($end)) {
                 $slotKey = $start->format('Y-m-d H:i');
                 if (! in_array($slotKey, $existing)) {
-                    $slots[] = [
-                        'datetime' => $start->format('Y-m-d H:i:s'),
-                        'time' => $start->format('h:i A')
-                    ];
+                    $hour = (int)$start->format('H');
+                    $minute = (int)$start->format('i');
+                    
+                    // Exclude lunch break (13:00 - 14:00) and late afternoon slot (16:30) as walk-in buffer slots
+                    $isLunch = ($hour === 13);
+                    $isAfternoonBuffer = ($hour === 16 && $minute === 30);
+                    
+                    if (!$isLunch && !$isAfternoonBuffer) {
+                        $slots[] = [
+                            'datetime' => $start->format('Y-m-d H:i:s'),
+                            'time' => $start->format('h:i A')
+                        ];
+                    }
                 }
                 $start->addMinutes($av->slot_minutes);
             }

@@ -4,6 +4,17 @@
 @section('content')
 <section class="search-section text-center py-4">
   <div class="container">
+    
+    <div class="alert alert-info border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3 text-start">
+      <div class="mb-2 mb-md-0">
+        <h6 class="mb-1 text-primary"><i class="fa-solid fa-robot me-1"></i> AI Symptom Checker & Specialty Guide</h6>
+        <p class="mb-0 text-muted small">Not sure which specialty you need? Tell us what symptoms you have, and our AI will select the right department!</p>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm px-4" data-bs-toggle="modal" data-bs-target="#aiTriageModal">
+        Ask AI Guide
+      </button>
+    </div>
+
     <h3 class="mb-4">Find the Right Doctor for You</h3>
 
     <form class="row g-3 justify-content-center" method="get" action="{{ route('doctors.index.public') }}">
@@ -120,6 +131,30 @@
               <label class="form-label fw-semibold">Notes (optional)</label>
               <textarea name="notes" class="form-control" rows="2" placeholder="Describe your issue"></textarea>
             </div>
+
+            <div class="col-12 mt-2">
+              <div class="p-3 bg-light rounded-3 border text-start">
+                <h6 class="text-success mb-2"><i class="fa fa-credit-card me-1"></i> Pay Consultation Fee ($50.00)</h6>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <input type="text" class="form-control form-control-sm" placeholder="Card Number" value="4242 4242 4242 4242" disabled>
+                  </div>
+                  <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="MM/YY" value="12/28" disabled>
+                  </div>
+                  <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="CVC" value="123" disabled>
+                  </div>
+                </div>
+                <small class="text-muted d-block mt-1">💳 Simulated Stripe Test Checkout. Fee will be charged upon scheduling.</small>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" name="pay_now" id="pay_now" value="1" checked>
+                  <label class="form-check-label small fw-semibold text-dark" for="pay_now">
+                    Authorize immediate payment charge of $50.00
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="text-end mt-3">
@@ -231,6 +266,77 @@
       });
     });
 
+    // Handle AI Triage Form Submit
+    $('#aiTriageForm').on('submit', function (e) {
+      e.preventDefault();
+      const symptoms = $('#aiSymptomsInput').val().trim();
+      if (!symptoms) return;
+
+      const $btn = $('#aiTriageSubmit');
+      $btn.prop('disabled', true).text('Checking...');
+
+      $.ajax({
+        url: '{{ route("chatbot.triage") }}',
+        method: 'POST',
+        data: {
+          _token: '{{ csrf_token() }}',
+          symptoms: symptoms
+        },
+        success: function (res) {
+          $btn.prop('disabled', false).text('Check Symptoms');
+          if (res.specialty_id) {
+            $('#aiMatchedText').html(`💡 AI matched your symptoms to: <strong>${res.specialty}</strong>!`);
+            $('#aiTriageResult').removeClass('d-none');
+            
+            // Select the matched specialty in the main search
+            $('#home_specialty').val(res.specialty_id).trigger('change');
+            
+            // Wait and close modal
+            setTimeout(function () {
+              $('#aiTriageModal').modal('hide');
+              $('#aiTriageResult').addClass('d-none');
+              $('#aiSymptomsInput').val('');
+            }, 2500);
+          } else {
+            $('#aiMatchedText').html(`❌ Unable to match symptoms to a specific department.`);
+            $('#aiTriageResult').removeClass('d-none');
+          }
+        },
+        error: function (xhr) {
+          $btn.prop('disabled', false).text('Check Symptoms');
+          toastr.error('Triage service unavailable.');
+        }
+      });
+    });
+
   });
 </script>
+
+<!-- AI Triage Modal -->
+<div class="modal fade" id="aiTriageModal" tabindex="-1" aria-labelledby="aiTriageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="aiTriageModalLabel"><i class="fa-solid fa-robot me-2"></i> AI Symptom Checker</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-start">
+        <form id="aiTriageForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Describe what you are feeling:</label>
+            <textarea id="aiSymptomsInput" class="form-control" rows="4" placeholder="e.g. I have a sore throat, mild fever, and coughing for 2 days." required></textarea>
+          </div>
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="aiTriageSubmit">Check Symptoms</button>
+          </div>
+        </form>
+        <div id="aiTriageResult" class="mt-3 d-none p-3 bg-light border rounded-3 text-center">
+          <p class="mb-1 fw-bold text-success" id="aiMatchedText"></p>
+          <small class="text-muted">The search dropdowns have been automatically configured for this specialty.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 @endpush

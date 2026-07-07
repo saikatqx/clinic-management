@@ -118,4 +118,78 @@ class ChatBotController extends Controller
             ], 500);
         }
     }
+
+    public function triage(Request $request)
+    {
+        $request->validate([
+            'symptoms' => 'required|string|max:1000',
+        ]);
+
+        $apiKey = config('services.openai.key');
+        $endpoint = config('services.openai.endpoint');
+        $model = config('services.openai.model', 'gpt-3.5-turbo');
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'message' => 'Chatbot is not configured. Please set OPENAI_API_KEY in your environment.',
+            ], 500);
+        }
+
+        $specialties = Specialty::where('is_active', 1)->pluck('name')->toArray();
+        if (empty($specialties)) {
+             return response()->json(['specialty' => null]);
+        }
+
+        $specialtiesList = implode(', ', $specialties);
+
+        $systemPrompt = "You are a professional clinic triager. Based on the patient's symptoms, you must match them to the single best fitting department/specialty from this list: [{$specialtiesList}].\n\n";
+        $systemPrompt .= "Rules:\n";
+        $systemPrompt .= "1. Reply ONLY with the exact specialty name from the list. Do not write introductory words, explanations, or punctuation.\n";
+        $systemPrompt .= "2. If none of the specialties fit or symptoms are too vague, reply with 'None'.\n\n";
+        $systemPrompt .= "Example responses: Cardiology, Pediatrics, None.";
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($endpoint, [
+                'model' => $model,
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => $systemPrompt,
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $request->input('symptoms'),
+                    ],
+                ],
+                'temperature' => 0.1,
+                'max_tokens' => 20,
+            ]);
+
+            if ($response->failed()) {
+                return response()->json(['message' => 'Triage service failed.'], 500);
+            }
+
+            $matched = trim($response->json('choices.0.message.content'));
+            $matchedClean = str_replace(['.', '"', '\''], '', $matched);
+
+            $found = null;
+            foreach ($specialties as $spec) {
+                if (strtolower($spec) === strtolower($matchedClean)) {
+                    $found = Specialty::where('name', $spec)->first();
+                    break;
+                }
+            }
+
+            return response()->json([
+                'specialty' => $found ? $found->name : null,
+                'specialty_id' => $found ? $found->id : null,
+            ]);
+        } catch (\Exception $exception) {
+            Log::error('OpenAI triage exception: ' . $exception->getMessage());
+            return response()->json(['message' => 'Unable to process request.'], 500);
+        }
+    }
 }

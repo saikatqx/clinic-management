@@ -33,8 +33,8 @@ Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth'])->name('dashboard');
 Route::get('/chatbot', [ChatBotController::class, 'index'])->name('chatbot.index');
-Route::post('/chatbot/message', [ChatBotController::class, 'send'])
-    ->name('chatbot.send');
+Route::post('/chatbot/message', [ChatBotController::class, 'send'])->name('chatbot.send');
+Route::post('/chatbot/triage', [ChatBotController::class, 'triage'])->name('chatbot.triage');
 
 Route::get('/doctors-by-specialty/{id}', [HomeController::class, 'getBySpecialty'])
     ->name('doctors.bySpecialty');
