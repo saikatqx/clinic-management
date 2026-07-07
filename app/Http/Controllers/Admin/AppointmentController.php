@@ -53,10 +53,19 @@ class AppointmentController extends Controller
 
     public function updateStatus(Request $request)
     {
-        $appointment = Appointment::findOrFail($request->id);
+        $appointment = Appointment::with('doctor')->findOrFail($request->id);
         $appointment->status = $request->status;
         $appointment->confirmed_at = $request->status == 'Confirmed' ? Carbon::now() : null;
         $appointment->save();
+
+        if ($appointment->patient_email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($appointment->patient_email)
+                    ->send(new \App\Mail\AppointmentStatusMail($appointment));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Mail sending failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json(['message' => 'Appointment marked as ' . $request->status]);
     }
@@ -105,7 +114,102 @@ class AppointmentController extends Controller
             'status' => 'Confirmed',
         ]);
 
+        $appointment->load('doctor');
+        if ($appointment->patient_email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($appointment->patient_email)
+                    ->send(new \App\Mail\PrescriptionMail($appointment));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Prescription mail sending failed: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->route('admin.appointments.index')
             ->with('success', 'Prescription generated successfully.');
+    }
+
+    public function calendarEvents(Request $request)
+    {
+        $start = $request->input('start');
+        $end = $request->input('end');
+
+        $query = Appointment::with('doctor');
+
+        if ($start && $end) {
+            $query->whereBetween('appointment_date', [$start, $end]);
+        }
+
+        $appointments = $query->get();
+
+        $events = [];
+        foreach ($appointments as $a) {
+            $color = match ($a->status) {
+                'Confirmed' => '#28a745',
+                'Cancelled' => '#dc3545',
+                default => '#ffc107',
+            };
+            $textColor = ($a->status === 'Pending') ? '#212529' : '#ffffff';
+
+            $startDt = Carbon::parse($a->appointment_date);
+            $endDt = (clone $startDt)->addMinutes(30);
+
+            $events[] = [
+                'id' => $a->id,
+                'title' => ($a->doctor ? $docName = $a->doctor->name : 'No Doc') . ' - ' . $a->patient_name,
+                'start' => $startDt->toIso8601String(),
+                'end' => $endDt->toIso8601String(),
+                'backgroundColor' => $color,
+                'borderColor' => $color,
+                'textColor' => $textColor,
+                'extendedProps' => [
+                    'patient_name' => $a->patient_name,
+                    'doctor_name' => $a->doctor ? $a->doctor->name : '-',
+                    'phone' => $a->patient_phone ?? '-',
+                    'status' => $a->status,
+                ],
+            ];
+        }
+
+        return response()->json($events);
+    }
+
+    public function reschedule(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:appointments,id',
+            'appointment_date' => 'required|date',
+        ]);
+
+        $appointment = Appointment::findOrFail($request->id);
+        
+        $exists = Appointment::where('doctor_id', $appointment->doctor_id)
+            ->where('appointment_date', $request->appointment_date)
+            ->where('id', '!=', $appointment->id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This doctor is already booked at the selected time.'
+            ], 409);
+        }
+
+        $appointment->appointment_date = $request->appointment_date;
+        $appointment->save();
+
+        $appointment->load('doctor');
+        if ($appointment->patient_email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($appointment->patient_email)
+                    ->send(new \App\Mail\AppointmentStatusMail($appointment));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Mail sending failed on reschedule: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Appointment rescheduled successfully to ' . Carbon::parse($request->appointment_date)->format('d M Y, h:i A')
+        ]);
     }
 }

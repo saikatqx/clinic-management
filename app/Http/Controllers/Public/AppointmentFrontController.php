@@ -40,6 +40,44 @@ class AppointmentFrontController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Verify doctor is active
+        $doctor = Doctor::where('id', $request->doctor_id)->where('is_active', 1)->first();
+        if (!$doctor) {
+            return response()->json(['message' => 'The selected doctor is currently inactive or not found.'], 404);
+        }
+
+        // Parse date and day of week
+        $dateTime = Carbon::parse($request->appointment_date);
+        $dayOfWeek = $dateTime->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+        
+        // Find if doctor is available on this day of week
+        $availabilities = $doctor->availabilities()->where('day_of_week', $dayOfWeek)->get();
+        if ($availabilities->isEmpty()) {
+            return response()->json(['message' => 'The doctor is not available on this day.'], 422);
+        }
+        
+        // Verify requested time fits in doctor's availabilities
+        $isValidSlot = false;
+        foreach ($availabilities as $av) {
+            $start = Carbon::parse($av->start_time)->setDate($dateTime->year, $dateTime->month, $dateTime->day)->seconds(0);
+            $end = Carbon::parse($av->end_time)->setDate($dateTime->year, $dateTime->month, $dateTime->day)->seconds(0);
+            
+            $targetSlot = (clone $dateTime)->seconds(0);
+            
+            $currentSlot = clone $start;
+            while ($currentSlot->lt($end)) {
+                if ($currentSlot->eq($targetSlot)) {
+                    $isValidSlot = true;
+                    break 2;
+                }
+                $currentSlot->addMinutes($av->slot_minutes);
+            }
+        }
+        
+        if (!$isValidSlot) {
+            return response()->json(['message' => 'The selected time slot is invalid for this doctor\'s availability.'], 422);
+        }
+
         // Prevent double-booking for exact datetime for the same doctor
         $exists = Appointment::where('doctor_id', $request->doctor_id)
             ->where('appointment_date', $request->appointment_date)

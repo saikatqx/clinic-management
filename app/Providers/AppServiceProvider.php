@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Always fetch from DB on every view load (no cache)
         View::composer(['frontend.layout', 'layouts.admin'], function ($view) {
-            $view->with('settings', Setting::first());
+            $view->with('settings', Setting::first() ?? new Setting());
         });
     }
 }

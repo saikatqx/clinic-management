@@ -29,6 +29,9 @@ Route::get('/admin', function () {
 });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/dashboard', function () {
+    return redirect()->route('admin.dashboard');
+})->middleware(['auth'])->name('dashboard');
 Route::get('/chatbot', [ChatBotController::class, 'index'])->name('chatbot.index');
 Route::post('/chatbot/message', [ChatBotController::class, 'send'])
     ->name('chatbot.send');
@@ -86,6 +89,8 @@ Route::middleware(['auth', 'verified'])
             ->name('services.toggleStatus');
 
         // Appointments CRUD
+        Route::get('appointments/calendar-events', [AppointmentController::class, 'calendarEvents'])->name('appointments.calendarEvents');
+        Route::post('appointments/reschedule', [AppointmentController::class, 'reschedule'])->name('appointments.reschedule');
         Route::resource('appointments', AppointmentController::class);
         Route::get('appointments-data', [AppointmentController::class, 'data'])->name('appointments.data');
         Route::post('appointments/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');

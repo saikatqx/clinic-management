@@ -26,8 +26,35 @@ class AdminController extends Controller
         $doctors = Doctor::count();
         $services = Service::count();
 
+        // 1. Appointments Trend (Last 15 days)
+        $daysRange = [];
+        $appointmentTrends = [];
+        for ($i = 14; $i >= 0; $i--) {
+            $dateStr = now()->subDays($i)->format('Y-m-d');
+            $daysRange[] = now()->subDays($i)->format('d M');
+            $appointmentTrends[] = Appointment::whereDate('appointment_date', $dateStr)->count();
+        }
+
+        // 2. Doctor Workloads
+        $doctorStats = Appointment::join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
+            ->select('doctors.name', \Illuminate\Support\Facades\DB::raw('count(appointments.id) as count'))
+            ->groupBy('doctors.name')
+            ->get()
+            ->pluck('count', 'name')
+            ->toArray();
+
+        // 3. Specialty Popularity
+        $specialtyStats = Appointment::join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
+            ->join('specialties', 'doctors.specialty_id', '=', 'specialties.id')
+            ->select('specialties.name', \Illuminate\Support\Facades\DB::raw('count(appointments.id) as count'))
+            ->groupBy('specialties.name')
+            ->get()
+            ->pluck('count', 'name')
+            ->toArray();
+
         return view('admin.dashboard', compact(
-            'totalAppointments', 'confirmed', 'pending', 'cancelled', 'upcoming', 'doctors', 'services'
+            'totalAppointments', 'confirmed', 'pending', 'cancelled', 'upcoming', 'doctors', 'services',
+            'daysRange', 'appointmentTrends', 'doctorStats', 'specialtyStats'
         ));
     }
 }

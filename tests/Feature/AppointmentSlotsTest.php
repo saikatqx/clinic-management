@@ -8,9 +8,12 @@ use App\Models\DoctorAvailability;
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AppointmentSlotsTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected $doctor;
 
     public function setUp(): void

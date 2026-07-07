@@ -6,9 +6,12 @@ use App\Models\Doctor;
 use App\Models\DoctorAvailability;
 use App\Models\Specialty;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class DoctorAvailabilityTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_doctor_has_availabilities()
     {
         $specialty = Specialty::firstOrCreate(['name' => 'Cardiology']);
