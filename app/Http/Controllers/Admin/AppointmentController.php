@@ -15,7 +15,58 @@ class AppointmentController extends Controller
 {
     public function index()
     {
-        return view('admin.appointments.index');
+        $doctors = Doctor::where('is_active', 1)->orderBy('name', 'asc')->get();
+        return view('admin.appointments.index', compact('doctors'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'required|exists:doctors,id',
+            'patient_name' => 'required|string|max:255',
+            'patient_email' => 'nullable|email|max:255',
+            'patient_phone' => 'required|string|max:20',
+            'appointment_date' => 'required|date',
+            'status' => 'required|in:Pending,Confirmed,Cancelled',
+            'payment_status' => 'required|in:Pending,Paid',
+            'notes' => 'nullable|string',
+        ]);
+
+        // Double booking check for exact datetime
+        $exists = Appointment::where('doctor_id', $request->doctor_id)
+            ->where('appointment_date', $request->appointment_date)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'The selected time is already booked. Please choose another slot.'
+            ], 409);
+        }
+
+        $appointment = Appointment::create([
+            'doctor_id' => $request->doctor_id,
+            'patient_name' => $request->patient_name,
+            'patient_email' => $request->patient_email,
+            'patient_phone' => $request->patient_phone,
+            'appointment_date' => $request->appointment_date,
+            'status' => $request->status,
+            'payment_status' => $request->payment_status,
+            'notes' => $request->notes,
+        ]);
+
+        if ($appointment->patient_email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($appointment->patient_email)
+                    ->send(new \App\Mail\AppointmentStatusMail($appointment));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Mail sending failed on walk-in booking: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Walk-in appointment booked successfully!'
+        ]);
     }
 
     public function data(Request $request)

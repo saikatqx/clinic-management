@@ -206,11 +206,13 @@ class AppointmentFrontController extends Controller
                     // Exclude lunch break (13:00 - 14:00) and late afternoon slot (16:30) as walk-in buffer slots
                     $isLunch = ($hour === 13);
                     $isAfternoonBuffer = ($hour === 16 && $minute === 30);
+                    $isBufferSlot = ($isLunch || $isAfternoonBuffer);
                     
-                    if (!$isLunch && !$isAfternoonBuffer) {
+                    if (!$isBufferSlot || $request->input('include_buffers') == '1') {
                         $slots[] = [
                             'datetime' => $start->format('Y-m-d H:i:s'),
-                            'time' => $start->format('h:i A')
+                            'time' => $start->format('h:i A'),
+                            'is_buffer' => $isBufferSlot
                         ];
                     }
                 }
