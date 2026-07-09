@@ -6,9 +6,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Banners</h2>
+    @can('create banners')
     <a href="{{ route('admin.banners.create') }}" class="btn btn-primary">
         ➕ Add New Banner
     </a>
+    @endcan
 </div>
 
 <div style="position: relative;">

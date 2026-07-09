@@ -105,6 +105,7 @@
 
     <!-- Right Sidebar Controls -->
     <div class="col-lg-4">
+        @can('update booking status')
         <!-- Status Panel -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white py-3">
@@ -151,6 +152,7 @@
                 </form>
             </div>
         </div>
+        @endcan
 
         <!-- Report Upload Panel -->
         <div class="card shadow-sm mb-4">
@@ -174,6 +176,7 @@
                     </div>
                 @endif
 
+                @can('upload reports')
                 <form action="{{ route('admin.diagnostic-bookings.uploadReport') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="id" value="{{ $booking->id }}">
@@ -186,6 +189,7 @@
                         <i class="fa fa-upload me-1"></i> Upload & Complete Booking
                     </button>
                 </form>
+                @endcan
             </div>
         </div>
 

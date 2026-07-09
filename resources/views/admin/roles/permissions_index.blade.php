@@ -30,9 +30,11 @@
                 </ol>
             </nav>
         </div>
+        @can('create permissions')
         <button class="btn btn-primary px-4 py-2 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#addPermissionModal">
             <i class="fa fa-plus-circle me-1"></i> Add Permission
         </button>
+        @endcan
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -64,11 +66,14 @@
                                 </td>
                                 <td>{{ $perm->created_at ? $perm->created_at->format('d-m-Y h:i A') : '-' }}</td>
                                 <td style="text-align: right;">
+                                    @can('edit permissions')
                                     <!-- Edit Button -->
                                     <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editPermissionModal-{{ $perm->id }}" title="Edit Permission">
                                         <i class="fa fa-edit"></i>
                                     </button>
+                                    @endcan
 
+                                    @can('delete permissions')
                                     <!-- Delete Button -->
                                     <form action="{{ route('admin.permissions.destroy', $perm->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this permission?')">
                                         @csrf
@@ -77,6 +82,7 @@
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </td>
                             </tr>
 

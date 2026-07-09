@@ -6,9 +6,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Health Packages</h2>
+    @can('create health packages')
     <a href="{{ route('admin.health-packages.create') }}" class="btn btn-primary shadow-sm">
         <i class="fa fa-plus me-1"></i> Add New Package
     </a>
+    @endcan
 </div>
 
 <div style="position: relative;">

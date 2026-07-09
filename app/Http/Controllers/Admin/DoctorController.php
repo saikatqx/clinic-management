@@ -200,33 +200,39 @@ class DoctorController extends Controller
         // Format data for DataTables
         $data = [];
         foreach ($results as $value) {
-            // ✅ Status toggle based on DB
-            $status = '
-        <label class="switch">
-            <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->is_active ? 'checked' : '') . '>
-            <span class="slider round"></span>
-        </label>';
+            $user = auth()->user();
 
-            // ✅ Routes for doctor actions
-            $viewUrl = route('admin.doctors.show', $value->id);
-            $editUrl = route('admin.doctors.edit', $value->id);
+            // Toggle switch — guarded by 'toggle doctors'
+            $status = $user->can('toggle doctors')
+                ? '<label class="switch">
+                    <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->is_active ? 'checked' : '') . '>
+                    <span class="slider round"></span>
+                </label>'
+                : ($value->is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
+
+            $viewUrl   = route('admin.doctors.show', $value->id);
+            $editUrl   = route('admin.doctors.edit', $value->id);
             $deleteUrl = route('admin.doctors.destroy', $value->id);
 
-            $action = '
-        <a href="' . $viewUrl . '" class="btn btn-sm btn-primary me-1">
-            <i class="fas fa-eye"></i>
-        </a>
-        <a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1">
-            <i class="fas fa-edit"></i>
-        </a>
-        <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
-            ' . csrf_field() . method_field('DELETE') . '
-            <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this Doctor?\')">
-                <i class="fas fa-trash"></i>
-            </button>
-        </form>';
+            // View button — always visible
+            $action = '<a href="' . $viewUrl . '" class="btn btn-sm btn-primary me-1"><i class="fas fa-eye"></i></a>';
 
-            // ✅ Build row
+            // Edit button — guarded by 'edit doctors'
+            if ($user->can('edit doctors')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete doctors'
+            if ($user->can('delete doctors')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this Doctor?\')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>';
+            }
+
+            // Build row
             $row = [];
             $row[] = $value->name;
             $row[] = $value->specialty ? $value->specialty->name : '-';

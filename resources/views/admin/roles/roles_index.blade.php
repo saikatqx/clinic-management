@@ -21,9 +21,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 fw-bold">Role List</h2>
+        @can('create roles')
         <button class="btn btn-primary px-4 py-2 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#addRoleModal">
             <i class="fa fa-plus-circle me-1"></i> Add Role
         </button>
+        @endcan
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -49,16 +51,21 @@
                                 </td>
                                 <td>{{ $role->created_at ? $role->created_at->format('d-m-Y h:i A') : '-' }}</td>
                                 <td style="text-align: right;">
+                                    @can('assign role permissions')
                                     <!-- Manage Permissions Button -->
                                     <a href="{{ route('admin.roles.permissions', $role->id) }}" class="btn btn-sm btn-success me-1" title="Manage Permissions">
                                         <i class="fa fa-lock"></i>
                                     </a>
+                                    @endcan
 
+                                    @can('edit roles')
                                     <!-- Edit Button -->
                                     <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editRoleModal-{{ $role->id }}" title="Edit Role Name">
                                         <i class="fa fa-edit"></i>
                                     </button>
+                                    @endcan
 
+                                    @can('delete roles')
                                     <!-- Delete Button -->
                                     @if(!in_array(strtolower($role->name), ['admin', 'super admin']))
                                         <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this role?')">
@@ -73,6 +80,7 @@
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     @endif
+                                    @endcan
                                 </td>
                             </tr>
 

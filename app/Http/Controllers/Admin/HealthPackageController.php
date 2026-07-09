@@ -161,28 +161,37 @@ class HealthPackageController extends Controller
 
         $data = [];
         foreach ($results as $value) {
-            $status = '
-            <label class="switch">
-                <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->status ? 'checked' : '') . '>
-                <span class="slider round"></span>
-            </label>';
+            $user = auth()->user();
 
-            $editUrl = route('admin.health-packages.edit', $value->id);
+            // Toggle switch — guarded by 'toggle health packages'
+            $status = $user->can('toggle health packages')
+                ? '<label class="switch">
+                    <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->status ? 'checked' : '') . '>
+                    <span class="slider round"></span>
+                </label>'
+                : ($value->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
+
+            $editUrl   = route('admin.health-packages.edit', $value->id);
             $deleteUrl = route('admin.health-packages.destroy', $value->id);
 
-            $imgUrl = $value->image ? asset('images/packages/' . $value->image) : asset('images/default.png');
+            $imgUrl  = $value->image ? asset('images/packages/' . $value->image) : asset('images/default.png');
             $imgHtml = '<img src="' . $imgUrl . '" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">';
 
-            $action = '
-            <a href="' . $editUrl . '" class="btn btn-sm btn-warning">
-                <i class="fas fa-edit"></i>
-            </a>
-            <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
-                ' . csrf_field() . method_field('DELETE') . '
-                <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this package?\')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>';
+            // Edit button — guarded by 'edit health packages'
+            $action = '';
+            if ($user->can('edit health packages')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete health packages'
+            if ($user->can('delete health packages')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this package?\')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>';
+            }
 
             $row = [];
             $row[] = $imgHtml;

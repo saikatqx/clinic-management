@@ -54,9 +54,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0 fw-bold">📁 Diagnostic Categories</h3>
+    @can('create diagnostic categories')
     <a href="{{ route('admin.diagnostic-categories.create') }}" class="btn btn-primary shadow-sm px-4 py-2 fw-semibold">
         <i class="fa fa-plus me-1"></i> Add Category
     </a>
+    @endcan
 </div>
 
 <div style="position: relative;" class="card border-0 shadow-sm p-3">

@@ -167,29 +167,41 @@ class ServiceController extends Controller
         // ✅ Format Data
         $data = [];
         foreach ($results as $service) {
+            $user = auth()->user();
+
             $imageHtml = $service->image
                 ? '<img src="' . asset('images/services/' . $service->image) . '" width="50" height="50" class="rounded">'
                 : '<span class="text-muted">No Image</span>';
 
-            $statusHtml = '
-            <label class="switch">
-                <input type="checkbox" data-id="' . $service->id . '" class="toggle-status" ' . ($service->is_active ? 'checked' : '') . '>
-                <span class="slider round"></span>
-            </label>';
+            // Toggle switch — guarded by 'toggle services'
+            $statusHtml = $user->can('toggle services')
+                ? '<label class="switch">
+                    <input type="checkbox" data-id="' . $service->id . '" class="toggle-status" ' . ($service->is_active ? 'checked' : '') . '>
+                    <span class="slider round"></span>
+                </label>'
+                : ($service->is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
 
-            $viewUrl = route('admin.services.show', $service->id);
-            $editUrl = route('admin.services.edit', $service->id);
+            $viewUrl   = route('admin.services.show', $service->id);
+            $editUrl   = route('admin.services.edit', $service->id);
             $deleteUrl = route('admin.services.destroy', $service->id);
 
-            $action = '
-            <a href="' . $viewUrl . '" class="btn btn-sm btn-primary me-1"><i class="fas fa-eye"></i></a>
-            <a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>
-            <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
-                ' . csrf_field() . method_field('DELETE') . '
-                <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this service?\')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>';
+            // View button — always visible
+            $action = '<a href="' . $viewUrl . '" class="btn btn-sm btn-primary me-1"><i class="fas fa-eye"></i></a>';
+
+            // Edit button — guarded by 'edit services'
+            if ($user->can('edit services')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete services'
+            if ($user->can('delete services')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this service?\')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>';
+            }
 
             $data[] = [
                 $service->name,

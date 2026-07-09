@@ -155,29 +155,37 @@ class SpecialtyController extends Controller
         // Format data for DataTables
         $data = [];
         foreach ($results as $value) {
-            $status = '
-            <label class="switch">
-                <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->is_active ? 'checked' : '') . '>
-                <span class="slider round"></span>
-            </label>';
+            $user = auth()->user();
 
-            $viewUrl = route('admin.specialties.show', $value->id);
-            $editUrl = route('admin.specialties.edit', $value->id);
+            // Toggle switch — guarded by 'toggle specialties'
+            $status = $user->can('toggle specialties')
+                ? '<label class="switch">
+                    <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->is_active ? 'checked' : '') . '>
+                    <span class="slider round"></span>
+                </label>'
+                : ($value->is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
+
+            $viewUrl   = route('admin.specialties.show', $value->id);
+            $editUrl   = route('admin.specialties.edit', $value->id);
             $deleteUrl = route('admin.specialties.destroy', $value->id);
 
-            $action = '
-            <a href="' . $viewUrl . '" class="btn btn-sm btn-primary">
-            <i class="fas fa-eye"></i>
-            </a>
-            <a href="' . $editUrl . '" class="btn btn-sm btn-warning">
-            <i class="fas fa-edit"></i>
-            </a>
-            <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
-                ' . csrf_field() . method_field('DELETE') . '
-                <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this specialty?\')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>';
+            // View button — always visible to anyone who can reach this page
+            $action = '<a href="' . $viewUrl . '" class="btn btn-sm btn-primary me-1"><i class="fas fa-eye"></i></a>';
+
+            // Edit button — guarded by 'edit specialties'
+            if ($user->can('edit specialties')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete specialties'
+            if ($user->can('delete specialties')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this specialty?\')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>';
+            }
 
             $row = [];
             $row[] = $value->name;

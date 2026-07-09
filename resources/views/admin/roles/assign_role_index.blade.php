@@ -57,9 +57,11 @@
                                     @endif
                                 </td>
                                 <td style="text-align: right;">
+                                    @can('assign user roles')
                                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal-{{ $user->id }}" title="Assign Roles">
                                         <i class="fa fa-user-shield"></i>
                                     </button>
+                                    @endcan
                                 </td>
                             </tr>
 

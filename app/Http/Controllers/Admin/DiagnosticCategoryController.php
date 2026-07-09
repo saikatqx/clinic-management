@@ -105,28 +105,37 @@ class DiagnosticCategoryController extends Controller
 
         $data = [];
         foreach ($results as $value) {
-            $status = '
-            <label class="switch">
-                <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->status ? 'checked' : '') . '>
-                <span class="slider round"></span>
-            </label>';
+            $user = auth()->user();
 
-            $editUrl = route('admin.diagnostic-categories.edit', $value->id);
+            // Toggle switch — guarded by 'toggle diagnostic categories'
+            $status = $user->can('toggle diagnostic categories')
+                ? '<label class="switch">
+                    <input type="checkbox" data-id="' . $value->id . '" class="toggle-status" ' . ($value->status ? 'checked' : '') . '>
+                    <span class="slider round"></span>
+                </label>'
+                : ($value->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
+
+            $editUrl   = route('admin.diagnostic-categories.edit', $value->id);
             $deleteUrl = route('admin.diagnostic-categories.destroy', $value->id);
 
-            $imgUrl = $value->image_url ? $value->image_url : asset('images/default.png');
+            $imgUrl  = $value->image_url ? $value->image_url : asset('images/default.png');
             $imgHtml = '<img src="' . $imgUrl . '" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">';
 
-            $action = '
-            <a href="' . $editUrl . '" class="btn btn-sm btn-warning">
-                <i class="fas fa-edit"></i>
-            </a>
-            <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
-                ' . csrf_field() . method_field('DELETE') . '
-                <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this category?\')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </form>';
+            // Edit button — guarded by 'edit diagnostic categories'
+            $action = '';
+            if ($user->can('edit diagnostic categories')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete diagnostic categories'
+            if ($user->can('delete diagnostic categories')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this category?\')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>';
+            }
 
             $row = [];
             $row[] = $imgHtml;

@@ -53,10 +53,12 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0 fw-bold">{{ $type === 'path' ? '🧪 Pathology Tests Directory' : '🩺 Diagnostic Tests Directory' }}</h3>
+    <h3 class="mb-0 fw-bold">{{ $type === 'path' ? '🧪 Pathology Tests Directory' : '🦥 Diagnostic Tests Directory' }}</h3>
+    @can('create diagnostic tests')
     <a href="{{ route('admin.diagnostics.create', ['type' => $type]) }}" class="btn btn-primary shadow-sm px-4 py-2 fw-semibold">
         <i class="fa fa-plus me-1"></i> Add {{ $type === 'path' ? 'Pathology' : 'Diagnostic' }}
     </a>
+    @endcan
 </div>
 
 <div style="position: relative;" class="card border-0 shadow-sm p-3">

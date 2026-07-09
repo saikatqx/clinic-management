@@ -157,27 +157,38 @@ class BannerController extends Controller
         // 🔹 Format for DataTables
         $data = [];
         foreach ($banners as $banner) {
-            $status = '
-                <label class="switch">
+            $user = auth()->user();
+
+            // Toggle switch — guarded by 'toggle banners'
+            $status = $user->can('toggle banners')
+                ? '<label class="switch">
                     <input type="checkbox" data-id="' . $banner->id . '" class="toggle-status" ' . ($banner->is_active ? 'checked' : '') . '>
                     <span class="slider round"></span>
-                </label>';
+                </label>'
+                : ($banner->is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>');
 
             $imageTag = $banner->image
                 ? '<img src="' . asset('images/banners/' . $banner->image) . '" class="img-thumbnail" width="100">'
                 : '-';
 
-            $editUrl = route('admin.banners.edit', $banner->id);
+            $editUrl   = route('admin.banners.edit', $banner->id);
             $deleteUrl = route('admin.banners.destroy', $banner->id);
 
-            $action = '
-                <a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>
-                <form action="' . $deleteUrl . '" method="POST" style="display:inline;">
+            // Edit button — guarded by 'edit banners'
+            $action = '';
+            if ($user->can('edit banners')) {
+                $action .= '<a href="' . $editUrl . '" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>';
+            }
+
+            // Delete button — guarded by 'delete banners'
+            if ($user->can('delete banners')) {
+                $action .= '<form action="' . $deleteUrl . '" method="POST" style="display:inline;">
                     ' . csrf_field() . method_field('DELETE') . '
                     <button class="btn btn-sm btn-danger" onclick="return confirm(\'Delete this banner?\')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </form>';
+            }
 
             $data[] = [
                 $imageTag,

@@ -75,6 +75,8 @@ class AppointmentController extends Controller
 
         $data = [];
         foreach ($appointments as $a) {
+            $user = auth()->user();
+
             $payBadge = match ($a->payment_status) {
                 'Paid' => '<span class="badge bg-success ms-1"><i class="fa fa-check-circle"></i> Paid</span>',
                 default => '<span class="badge bg-secondary ms-1"><i class="fa-solid fa-clock"></i> Unpaid</span>',
@@ -86,13 +88,19 @@ class AppointmentController extends Controller
                 default => '<span class="badge bg-warning text-dark">Pending</span>',
             } . $payBadge;
 
-            $actions = '
-                <a href="' . route('admin.appointments.prescription', $a->id) . '" class="btn btn-info btn-sm">
-                🩺 Prescription
-                </a>
-                <button class="btn btn-success btn-sm update-status" data-id="' . $a->id . '" data-status="Confirmed">✅ Confirm</button>
-                <button class="btn btn-danger btn-sm update-status" data-id="' . $a->id . '" data-status="Cancelled">❌ Cancel</button>
-            ';
+            // Prescription button — guarded by 'edit appointments'
+            $actions = '';
+            if ($user->can('edit appointments')) {
+                $actions .= '<a href="' . route('admin.appointments.prescription', $a->id) . '" class="btn btn-info btn-sm me-1">
+                    🩺 Prescription
+                </a>';
+            }
+
+            // Status update buttons — guarded by 'update appointment status'
+            if ($user->can('update appointment status')) {
+                $actions .= '<button class="btn btn-success btn-sm update-status me-1" data-id="' . $a->id . '" data-status="Confirmed">✅ Confirm</button>';
+                $actions .= '<button class="btn btn-danger btn-sm update-status" data-id="' . $a->id . '" data-status="Cancelled">❌ Cancel</button>';
+            }
 
             $data[] = [
                 $a->id,

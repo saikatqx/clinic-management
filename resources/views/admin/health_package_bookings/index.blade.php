@@ -6,9 +6,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Health Package Bookings</h2>
+    @can('view bookings')
     <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#adminBookModal">
         <i class="fa fa-plus me-1"></i> Book Health Package
     </button>
+    @endcan
 </div>
 
 <div style="position: relative;">
