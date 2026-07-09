@@ -99,6 +99,28 @@
     </a>
 
 
+    <!-- Access Control Dropdown -->
+    <div class="submenu-wrapper">
+        <button class="submenu-toggle {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*')) ? 'active' : '' }}">
+            <span>🔐 Access Control</span>
+            <span class="arrow">▾</span>
+        </button>
+        <div class="submenu {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*')) ? 'show' : '' }}">
+            <a href="{{ route('admin.roles.index') }}"
+                class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                - Role List
+            </a>
+            <a href="{{ route('admin.assign-role.index') }}"
+                class="{{ request()->routeIs('admin.assign-role.*') ? 'active' : '' }}">
+                - Assign Role
+            </a>
+            <a href="{{ route('admin.permissions.index') }}"
+                class="{{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                - Permission List
+            </a>
+        </div>
+    </div>
+
     <a href="{{ route('admin.settings.index') }}"
         class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
         ⚙️ Settings

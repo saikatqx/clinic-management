@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\PathologyBookingController;
 use App\Http\Controllers\Public\PublicDiagnosticBookingController;
 use App\Http\Controllers\Public\PublicHealthPackageController;
 use App\Http\Controllers\Public\PublicPathologyBookingController;
+use App\Http\Controllers\Admin\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -179,6 +180,29 @@ Route::middleware(['auth', 'verified'])
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings/update', [SettingController::class, 'update'])->name('settings.update');
+
+        // Access Control (Admin Only)
+        Route::middleware('role:admin')->group(function () {
+            // Roles CRUD
+            Route::get('/roles', [RolePermissionController::class, 'rolesIndex'])->name('roles.index');
+            Route::post('/roles', [RolePermissionController::class, 'rolesStore'])->name('roles.store');
+            Route::put('/roles/{id}', [RolePermissionController::class, 'rolesUpdate'])->name('roles.update');
+            Route::delete('/roles/{id}', [RolePermissionController::class, 'rolesDestroy'])->name('roles.destroy');
+
+            // Manage Permissions
+            Route::get('/roles/{id}/permissions', [RolePermissionController::class, 'manageRolePermissions'])->name('roles.permissions');
+            Route::put('/roles/{id}/permissions', [RolePermissionController::class, 'updateRolePermissions'])->name('roles.permissions.update');
+
+            // Assign Role
+            Route::get('/assign-role', [RolePermissionController::class, 'assignRoleIndex'])->name('assign-role.index');
+            Route::post('/assign-role', [RolePermissionController::class, 'assignRoleUpdate'])->name('assign-role.update');
+
+            // Permissions CRUD
+            Route::get('/permissions', [RolePermissionController::class, 'permissionsIndex'])->name('permissions.index');
+            Route::post('/permissions', [RolePermissionController::class, 'permissionsStore'])->name('permissions.store');
+            Route::put('/permissions/{id}', [RolePermissionController::class, 'permissionsUpdate'])->name('permissions.update');
+            Route::delete('/permissions/{id}', [RolePermissionController::class, 'permissionsDestroy'])->name('permissions.destroy');
+        });
     });
 
 Route::middleware('auth')->group(function () {
