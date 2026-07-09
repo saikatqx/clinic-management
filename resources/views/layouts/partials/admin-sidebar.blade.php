@@ -109,14 +109,14 @@
     </a>
     @endcan
 
-    @canany(['view roles', 'assign user roles', 'view permissions'])
+    @canany(['view roles', 'assign user roles', 'view permissions', 'view users'])
     <!-- Access Control Dropdown -->
     <div class="submenu-wrapper">
-        <button class="submenu-toggle {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*')) ? 'active' : '' }}">
+        <button class="submenu-toggle {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.users.*')) ? 'active' : '' }}">
             <span>🔐 Access Control</span>
             <span class="arrow">▾</span>
         </button>
-        <div class="submenu {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*')) ? 'show' : '' }}">
+        <div class="submenu {{ (request()->routeIs('admin.roles.*') || request()->routeIs('admin.assign-role.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.users.*')) ? 'show' : '' }}">
             @can('view roles')
             <a href="{{ route('admin.roles.index') }}"
                 class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
@@ -133,6 +133,12 @@
             <a href="{{ route('admin.permissions.index') }}"
                 class="{{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
                 - Permission List
+            </a>
+            @endcan
+            @can('view users')
+            <a href="{{ route('admin.users.index') }}"
+                class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                - User List
             </a>
             @endcan
         </div>

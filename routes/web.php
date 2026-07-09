@@ -25,6 +25,7 @@ use App\Http\Controllers\Public\PublicDiagnosticBookingController;
 use App\Http\Controllers\Public\PublicHealthPackageController;
 use App\Http\Controllers\Public\PublicPathologyBookingController;
 use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -201,6 +202,15 @@ Route::middleware(['auth', 'verified'])
         Route::post('/permissions', [RolePermissionController::class, 'permissionsStore'])->name('permissions.store')->middleware('can:create permissions');
         Route::put('/permissions/{id}', [RolePermissionController::class, 'permissionsUpdate'])->name('permissions.update')->middleware('can:edit permissions');
         Route::delete('/permissions/{id}', [RolePermissionController::class, 'permissionsDestroy'])->name('permissions.destroy')->middleware('can:delete permissions');
+
+        // Users CRUD
+        Route::get('/users/data', [UserController::class, 'data'])->name('users.data')->middleware('can:view users');
+        Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('can:view users');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create')->middleware('can:create users');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('can:create users');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit')->middleware('can:edit users');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update')->middleware('can:edit users');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('can:delete users');
     });
 
 Route::middleware('auth')->group(function () {
