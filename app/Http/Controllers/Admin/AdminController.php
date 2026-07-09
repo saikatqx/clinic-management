@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Service;
+use App\Models\DiagnosticBooking;
+use App\Models\HealthPackageBooking;
 
 class AdminController extends Controller
 {
@@ -25,6 +27,21 @@ class AdminController extends Controller
 
         $doctors = Doctor::count();
         $services = Service::count();
+
+        // Lab & package bookings counts
+        $totalDiagBookings = DiagnosticBooking::where('type', 'diag')->count();
+        $totalPathBookings = DiagnosticBooking::where('type', 'path')->count();
+        $totalPkgBookings = HealthPackageBooking::count();
+
+        $recentLabBookings = DiagnosticBooking::with('items.diagnostic')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        $recentPkgBookings = HealthPackageBooking::with('items.package')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
         // 1. Appointments Trend (Last 15 days)
         $daysRange = [];
@@ -54,7 +71,8 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'totalAppointments', 'confirmed', 'pending', 'cancelled', 'upcoming', 'doctors', 'services',
-            'daysRange', 'appointmentTrends', 'doctorStats', 'specialtyStats'
+            'daysRange', 'appointmentTrends', 'doctorStats', 'specialtyStats',
+            'totalDiagBookings', 'totalPathBookings', 'totalPkgBookings', 'recentLabBookings', 'recentPkgBookings'
         ));
     }
 }

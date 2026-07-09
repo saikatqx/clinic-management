@@ -277,13 +277,22 @@
             <a class="nav-link {{ request()->routeIs('services.index.public*') ? 'active' : '' }}" href="{{ route('services.index.public') }}">Services</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('diagnostics.index.public*') ? 'active' : '' }}" href="{{ route('diagnostics.index.public') }}">Diagnostics</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('pathology.index.public*') ? 'active' : '' }}" href="{{ route('pathology.index.public') }}">Pathology</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('packages.index.public*') ? 'active' : '' }}" href="{{ route('packages.index.public') }}">Health Packages</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
           </li>
           <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('chatbot.index') ? 'active' : '' }}" href="{{ route('chatbot.index') }}">Health Chat</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('appointments.status') ? 'active' : '' }}" href="{{ route('appointments.status') }}">Appointment Status</a>
+            <a class="nav-link {{ request()->routeIs('appointments.status') ? 'active' : '' }}" href="{{ route('appointments.status') }}">Track Status</a>
           </li>
           <li class="nav-item ms-lg-3">
             <a href="{{ route('doctors.index.public') }}" class="btn btn-primary">Book Appointment</a>

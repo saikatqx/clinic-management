@@ -15,6 +15,15 @@ use App\Http\Controllers\Public\DoctorFrontController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\AppointmentFrontController;
 use App\Http\Controllers\Frontend\ChatBotController;
+use App\Http\Controllers\Admin\DiagnosticCategoryController;
+use App\Http\Controllers\Admin\DiagnosticController;
+use App\Http\Controllers\Admin\HealthPackageController;
+use App\Http\Controllers\Admin\DiagnosticBookingController;
+use App\Http\Controllers\Admin\HealthPackageBookingController;
+use App\Http\Controllers\Admin\PathologyBookingController;
+use App\Http\Controllers\Public\PublicDiagnosticBookingController;
+use App\Http\Controllers\Public\PublicHealthPackageController;
+use App\Http\Controllers\Public\PublicPathologyBookingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,6 +68,24 @@ Route::get('/appointments/{id}/prescription', [AppointmentFrontController::class
 
 // Ajax slots (optional simple generator)
 Route::get('/appointment/slots', [AppointmentFrontController::class, 'slots'])->name('appointments.slots');
+
+// Diagnostics public routes
+Route::get('/diagnostics', [PublicDiagnosticBookingController::class, 'index'])->name('diagnostics.index.public');
+Route::post('/diagnostics/book', [PublicDiagnosticBookingController::class, 'book'])->name('diagnostics.book.public');
+Route::post('/diagnostics/store', [PublicDiagnosticBookingController::class, 'store'])->name('diagnostics.store.public');
+Route::get('/diagnostics/success', [PublicDiagnosticBookingController::class, 'success'])->name('diagnostics.success');
+
+// Health Packages public routes
+Route::get('/packages', [PublicHealthPackageController::class, 'index'])->name('packages.index.public');
+Route::post('/packages/book', [PublicHealthPackageController::class, 'book'])->name('packages.book.public');
+Route::post('/packages/store', [PublicHealthPackageController::class, 'store'])->name('packages.store.public');
+Route::get('/packages/success', [PublicHealthPackageController::class, 'success'])->name('packages.success');
+
+// Pathology public routes
+Route::get('/pathology', [PublicPathologyBookingController::class, 'index'])->name('pathology.index.public');
+Route::post('/pathology/book', [PublicPathologyBookingController::class, 'book'])->name('pathology.book.public');
+Route::post('/pathology/store', [PublicPathologyBookingController::class, 'store'])->name('pathology.store.public');
+Route::get('/pathology/success', [PublicPathologyBookingController::class, 'success'])->name('pathology.success');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
@@ -111,6 +138,44 @@ Route::middleware(['auth', 'verified'])
         Route::post('availabilities', [AvailabilityController::class, 'store'])->name('availabilities.store');
         Route::delete('availabilities/{id}', [AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
         Route::get('availabilities', [AvailabilityController::class, 'index'])->name('availabilities.index');
+
+        // Diagnostic Categories CRUD
+        Route::get('diagnostic-categories/data', [DiagnosticCategoryController::class, 'data'])->name('diagnostic-categories.data');
+        Route::post('diagnostic-categories/toggle-status', [DiagnosticCategoryController::class, 'toggleStatus'])->name('diagnostic-categories.toggleStatus');
+        Route::resource('diagnostic-categories', DiagnosticCategoryController::class);
+
+        // Diagnostics (Tests) CRUD
+        Route::get('diagnostics/diag', [DiagnosticController::class, 'indexDiag'])->name('diagnostics.indexDiag');
+        Route::get('diagnostics/path', [DiagnosticController::class, 'indexPath'])->name('diagnostics.indexPath');
+        Route::get('diagnostics/data/{type?}', [DiagnosticController::class, 'data'])->name('diagnostics.data');
+        Route::post('diagnostics/toggle-status', [DiagnosticController::class, 'toggleStatus'])->name('diagnostics.toggleStatus');
+        Route::resource('diagnostics', DiagnosticController::class)->except(['index']);
+
+        // Health Packages CRUD
+        Route::get('health-packages/data', [HealthPackageController::class, 'data'])->name('health-packages.data');
+        Route::post('health-packages/toggle-status', [HealthPackageController::class, 'toggleStatus'])->name('health-packages.toggleStatus');
+        Route::resource('health-packages', HealthPackageController::class);
+
+        // Diagnostic Bookings
+        Route::get('diagnostic-bookings/data', [DiagnosticBookingController::class, 'data'])->name('diagnostic-bookings.data');
+        Route::post('diagnostic-bookings/update-status', [DiagnosticBookingController::class, 'updateStatus'])->name('diagnostic-bookings.updateStatus');
+        Route::post('diagnostic-bookings/reschedule', [DiagnosticBookingController::class, 'reschedule'])->name('diagnostic-bookings.reschedule');
+        Route::post('diagnostic-bookings/upload-report', [DiagnosticBookingController::class, 'uploadReport'])->name('diagnostic-bookings.uploadReport');
+        Route::resource('diagnostic-bookings', DiagnosticBookingController::class);
+
+        // Health Package Bookings
+        Route::get('health-package-bookings/data', [HealthPackageBookingController::class, 'data'])->name('health-package-bookings.data');
+        Route::post('health-package-bookings/update-status', [HealthPackageBookingController::class, 'updateStatus'])->name('health-package-bookings.updateStatus');
+        Route::post('health-package-bookings/reschedule', [HealthPackageBookingController::class, 'reschedule'])->name('health-package-bookings.reschedule');
+        Route::post('health-package-bookings/upload-report', [HealthPackageBookingController::class, 'uploadReport'])->name('health-package-bookings.uploadReport');
+        Route::resource('health-package-bookings', HealthPackageBookingController::class);
+
+        // Pathology Bookings
+        Route::get('pathology-bookings/data', [PathologyBookingController::class, 'data'])->name('pathology-bookings.data');
+        Route::post('pathology-bookings/update-status', [PathologyBookingController::class, 'updateStatus'])->name('pathology-bookings.updateStatus');
+        Route::post('pathology-bookings/reschedule', [PathologyBookingController::class, 'reschedule'])->name('pathology-bookings.reschedule');
+        Route::post('pathology-bookings/upload-report', [PathologyBookingController::class, 'uploadReport'])->name('pathology-bookings.uploadReport');
+        Route::resource('pathology-bookings', PathologyBookingController::class);
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings/update', [SettingController::class, 'update'])->name('settings.update');

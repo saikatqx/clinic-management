@@ -146,13 +146,45 @@ class AppointmentFrontController extends Controller
             'appointment_no' => 'required'
         ]);
 
-        $appointment = Appointment::where('id', $request->appointment_no)->first();
+        $no = trim($request->appointment_no);
 
-        if (!$appointment) {
-            return back()->with('error', 'No appointment found with this number.');
+        if (str_starts_with($no, 'DIAG-')) {
+            $booking = \App\Models\DiagnosticBooking::where('booking_no', $no)->where('type', 'diag')->with('items.diagnostic')->first();
+            if (!$booking) {
+                return back()->with('error', 'No diagnostic booking found with this number.');
+            }
+            return view('frontend.appointment.status', [
+                'type' => 'diag',
+                'booking' => $booking
+            ]);
+        } elseif (str_starts_with($no, 'PATH-')) {
+            $booking = \App\Models\DiagnosticBooking::where('booking_no', $no)->where('type', 'path')->with('items.diagnostic')->first();
+            if (!$booking) {
+                return back()->with('error', 'No pathology booking found with this number.');
+            }
+            return view('frontend.appointment.status', [
+                'type' => 'path',
+                'booking' => $booking
+            ]);
+        } elseif (str_starts_with($no, 'PKG-')) {
+            $booking = \App\Models\HealthPackageBooking::where('booking_no', $no)->with('items.package')->first();
+            if (!$booking) {
+                return back()->with('error', 'No health package booking found with this number.');
+            }
+            return view('frontend.appointment.status', [
+                'type' => 'package',
+                'booking' => $booking
+            ]);
+        } else {
+            $appointment = Appointment::where('id', $no)->first();
+            if (!$appointment) {
+                return back()->with('error', 'No appointment found with this number.');
+            }
+            return view('frontend.appointment.status', [
+                'type' => 'appointment',
+                'appointment' => $appointment
+            ]);
         }
-
-        return view('frontend.appointment.status', compact('appointment'));
     }
     public function downloadPrescription($id)
     {

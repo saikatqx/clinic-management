@@ -51,6 +51,36 @@
             </div>
         </div>
 
+        <!-- Lab & Packages Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-bg-info mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">🩺 Diagnostic Bookings</h5>
+                        <h3 class="card-text">{{ $totalDiagBookings }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-bg-dark mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">🧪 Pathology Bookings</h5>
+                        <h3 class="card-text">{{ $totalPathBookings }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-bg-warning text-dark mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">📦 Package Bookings</h5>
+                        <h3 class="card-text">{{ $totalPkgBookings }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Resources Overview -->
         <div class="row mb-4">
             <div class="col-md-6">
@@ -115,6 +145,115 @@
                             </div>
                         @else
                             <p class="text-muted">No upcoming appointments.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Lab and Package Bookings -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-primary fw-bold"><i class="fa fa-microscope me-2"></i> Recent Lab Bookings</h5>
+                        <a href="{{ route('admin.diagnostic-bookings.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        @if($recentLabBookings->count())
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover align-middle small">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking No</th>
+                                            <th>Patient</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentLabBookings as $booking)
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ $booking->type === 'path' ? route('admin.pathology-bookings.show', $booking->id) : route('admin.diagnostic-bookings.show', $booking->id) }}" class="fw-semibold">
+                                                        {{ $booking->booking_no }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold">{{ $booking->patient_name }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $booking->mobile }}</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">
+                                                        {{ $booking->type === 'path' ? '🧪 Pathology' : '🩺 Diagnostic' }}
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold">₹{{ number_format($booking->total_amount, 2) }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $booking->booking_status_badge }}">
+                                                        {{ $booking->booking_status_label }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <p class="text-muted my-3 text-center">No recent lab bookings.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-primary fw-bold"><i class="fa fa-box me-2"></i> Recent Package Bookings</h5>
+                        <a href="{{ route('admin.health-package-bookings.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        @if($recentPkgBookings->count())
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover align-middle small">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking No</th>
+                                            <th>Patient</th>
+                                            <th>Package</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentPkgBookings as $booking)
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ route('admin.health-package-bookings.show', $booking->id) }}" class="fw-semibold">
+                                                        {{ $booking->booking_no }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold">{{ $booking->patient_name }}</div>
+                                                    <div class="text-muted" style="font-size: 11px;">{{ $booking->mobile }}</div>
+                                                </td>
+                                                <td class="text-truncate" style="max-width: 150px;">
+                                                    {{ $booking->items->first()->package_name ?? 'N/A' }}
+                                                </td>
+                                                <td class="fw-semibold">₹{{ number_format($booking->total_amount, 2) }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $booking->booking_status_badge }}">
+                                                        {{ $booking->booking_status_label }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <p class="text-muted my-3 text-center">No recent package bookings.</p>
                         @endif
                     </div>
                 </div>

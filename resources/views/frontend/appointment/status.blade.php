@@ -1,5 +1,5 @@
 @extends('frontend.layout')
-@section('title', 'Appointment Status')
+@section('title', 'Track Booking & Appointment')
 
 @section('content')
 <style>
@@ -69,8 +69,8 @@
 
 <section class="status-hero">
   <div class="container">
-    <h1 class="mb-2">Appointment Status</h1>
-    <p class="mb-0">Track your appointment from request to prescription — in one place.</p>
+    <h1 class="mb-2">Booking & Appointment Status</h1>
+    <p class="mb-0">Track your doctor appointment, diagnostic test, pathology lab test, or health package checkup status.</p>
   </div>
 </section>
 
@@ -78,7 +78,7 @@
   <div class="container" style="max-width:860px;">
     <div class="status-card">
       {{-- Search --}}
-      <h4 class="mb-3">Find your appointment</h4>
+      <h4 class="mb-3">Find your booking or appointment</h4>
 
       @if(session('error'))
         <div class="alert alert-danger mb-3">{{ session('error') }}</div>
@@ -89,7 +89,7 @@
         <div class="col-md-9">
           <div class="floating-input">
             <input type="text" name="appointment_no" class="form-control" placeholder=" " required>
-            <label>Enter your Appointment Number</label>
+            <label>Enter Booking Number or Appointment ID</label>
           </div>
         </div>
         <div class="col-md-3 d-grid">
@@ -98,7 +98,7 @@
       </form>
 
       {{-- Result --}}
-      @if(!empty($appointment))
+      @if(!empty($type) && $type === 'appointment')
         @php
           // derive step index & nice dates
           $stepIndex = 1; // 1=requested, 2=confirmed, 3=prescription generated
@@ -181,6 +181,112 @@
           @endif
         </div>
 
+      @elseif(!empty($booking))
+        @php
+          // derive step index & nice dates for bookings
+          $stepIndex = 1; // 1=requested, 2=confirmed/sample collected, 3=completed/report uploaded
+          $status = $booking->booking_status;
+          if (in_array($status, ['confirmed', 'sample_collected', 'completed'])) { $stepIndex = 2; }
+          if ($status === 'cancelled') { $stepIndex = 2; }
+          if ($status === 'completed' || !empty($booking->report_pdf_path)) { $stepIndex = 3; }
+
+          $createdAt      = optional($booking->created_at)->format('d M Y, h:i A');
+          $confirmedAt    = ($stepIndex >= 2 && $status !== 'cancelled') ? ($booking->updated_at ? $booking->updated_at->format('d M Y, h:i A') : null) : null;
+          $reportGenAt    = $booking->report_uploaded_at ? $booking->report_uploaded_at->format('d M Y, h:i A') : null;
+          $apptDatePretty = \Illuminate\Support\Carbon::parse($booking->booking_date)->format('d M Y') . ' (' . $booking->booking_time . ')';
+        @endphp
+
+        <hr class="my-4">
+
+        {{-- Stepper --}}
+        <div class="stepper">
+          <div class="step {{ $stepIndex >= 1 ? 'active done' : '' }}">
+            <span class="dot">1</span>
+            <label>Requested</label>
+            <small>{{ $createdAt ?? '-' }}</small>
+          </div>
+
+          <div class="connector {{ $stepIndex >= 2 ? ($status === 'cancelled' ? '' : 'fill-green') : 'fill-red' }}"></div>
+
+          <div class="step {{ $stepIndex >= 2 ? ($status === 'cancelled' ? 'active' : 'active done') : '' }}">
+            <span class="dot">{{ $status === 'cancelled' ? '✕' : '2' }}</span>
+            <label>{{ $status === 'cancelled' ? 'Cancelled' : (($type === 'path' && $status === 'sample_collected') ? 'Sample Collected' : 'Confirmed') }}</label>
+            <small>{{ $confirmedAt ?? '-' }}</small>
+          </div>
+
+          <div class="connector {{ $stepIndex >= 3 ? 'fill-green' : '' }}"></div>
+
+          <div class="step {{ $stepIndex >= 3 ? 'active done' : '' }}">
+            <span class="dot">3</span>
+            <label>Report Ready</label>
+            <small>{{ $reportGenAt ?? '-' }}</small>
+          </div>
+        </div>
+
+        {{-- Details --}}
+        <div class="row g-3 mt-4">
+          <div class="col-md-6">
+            <div class="kv"><div class="k">Booking Number</div><div class="v">#{{ $booking->booking_no }}</div></div>
+            <div class="kv"><div class="k">Patient Name</div><div class="v">{{ $booking->patient_name }}</div></div>
+            <div class="kv"><div class="k">Patient Mobile</div><div class="v">{{ $booking->mobile }}</div></div>
+            <div class="kv"><div class="k">Collection Type</div><div class="v">{{ $booking->collection_type === 'home' ? '🏠 Home Collection' : '🏢 Clinic Visit' }}</div></div>
+          </div>
+          <div class="col-md-6">
+            <div class="kv">
+              <div class="k">Booked Items</div>
+              <div class="v text-primary fw-semibold">
+                @if($type === 'package')
+                  {{ $booking->items->first()->package_name ?? 'N/A' }}
+                @else
+                  {{ implode(', ', $booking->items->map(fn($item) => optional($item->diagnostic)->name ?? 'N/A')->toArray()) }}
+                @endif
+              </div>
+            </div>
+            <div class="kv"><div class="k">Scheduled Slot</div><div class="v">{{ $apptDatePretty ?? '-' }}</div></div>
+            <div class="kv">
+              <div class="k">Booking Status</div>
+              <div class="v">
+                @php
+                  $badgeClass = 'bg-secondary';
+                  if ($status === 'confirmed')  $badgeClass = 'bg-primary';
+                  if ($status === 'sample_collected')  $badgeClass = 'bg-info';
+                  if ($status === 'completed')  $badgeClass = 'bg-success';
+                  if ($status === 'cancelled')  $badgeClass = 'bg-danger';
+                @endphp
+                <span class="badge {{ $badgeClass }}">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Payment Status</div>
+              <div class="v">
+                <span class="badge bg-{{ $booking->payment_status === 'paid' ? 'success' : 'warning text-dark' }}">{{ ucfirst($booking->payment_status) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- Lab Report Action --}}
+        <div class="d-flex gap-2 mt-4">
+          @if(!empty($booking->report_pdf_path))
+            @php
+              $reportUrl = asset('reports/diagnostic/' . $booking->report_pdf_path);
+              if ($type === 'path') {
+                $reportUrl = asset('reports/pathology/' . $booking->report_pdf_path);
+              } elseif ($type === 'package') {
+                $reportUrl = asset('reports/packages/' . $booking->report_pdf_path);
+              }
+            @endphp
+            <a href="{{ $reportUrl }}"
+               target="_blank"
+               class="btn btn-success px-4">
+              <i class="fa-solid fa-file-pdf me-1"></i> Download PDF Report
+            </a>
+          @else
+            <button class="btn btn-outline-secondary" disabled>
+              <i class="fa-solid fa-clock me-1"></i> Lab report is not uploaded yet
+            </button>
+          @endif
+        </div>
       @endif
     </div>
   </div>
