@@ -5,14 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Diagnostic extends Model implements HasMedia
+class Diagnostic extends Model
 {
-    use HasFactory, InteractsWithMedia;
-
-    public const IMAGE = 'image';
+    use HasFactory;
 
     protected $table = 'diagnostics';
 
@@ -23,6 +19,7 @@ class Diagnostic extends Model implements HasMedia
         'name',
         'price',
         'status',
+        'image',
     ];
 
     protected $casts = [
@@ -30,6 +27,7 @@ class Diagnostic extends Model implements HasMedia
         'name' => 'string',
         'price' => 'decimal:2',
         'status' => 'boolean',
+        'image' => 'string',
     ];
 
     public static $rules = [
@@ -37,7 +35,7 @@ class Diagnostic extends Model implements HasMedia
         'name' => 'required|string|max:255|unique:diagnostics,name',
         'price' => 'required|numeric|min:0',
         'status' => 'nullable|boolean',
-        'image' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:1024',
     ];
 
     public function category(): BelongsTo
@@ -47,9 +45,7 @@ class Diagnostic extends Model implements HasMedia
 
     public function getImageUrlAttribute(): string
     {
-        $media = $this->getFirstMedia(self::IMAGE);
-
-        return $media ? $media->getFullUrl() : '';
+        return $this->image ? asset('images/diagnostics/' . $this->image) : '';
     }
 
     public function bookingItems()

@@ -23,16 +23,20 @@ class DiagnosticCategoryController extends Controller
     {
         $request->validate(DiagnosticCategory::$rules);
 
+        $imageName = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/diagnostic_categories'), $imageName);
+        }
+
         $category = DiagnosticCategory::create([
             'name' => $request->name,
             'type' => $request->type,
             'description' => $request->description,
             'status' => $request->has('status') ? (bool)$request->status : true,
+            'image' => $imageName,
         ]);
-
-        if ($request->hasFile('image')) {
-            $category->addMediaFromRequest('image')->toMediaCollection(DiagnosticCategory::IMAGE);
-        }
 
         return redirect()->route('admin.diagnostic-categories.index')
             ->with('success', 'Diagnostic Category created successfully!');
@@ -53,17 +57,24 @@ class DiagnosticCategoryController extends Controller
 
         $request->validate($rules);
 
+        $imageName = $category->image;
+        if ($request->hasFile('image')) {
+            if ($category->image && file_exists(public_path('images/diagnostic_categories/' . $category->image))) {
+                unlink(public_path('images/diagnostic_categories/' . $category->image));
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/diagnostic_categories'), $imageName);
+        }
+
         $category->update([
             'name' => $request->name,
             'type' => $request->type,
             'description' => $request->description,
             'status' => $request->has('status') ? (bool)$request->status : true,
+            'image' => $imageName,
         ]);
-
-        if ($request->hasFile('image')) {
-            $category->clearMediaCollection(DiagnosticCategory::IMAGE);
-            $category->addMediaFromRequest('image')->toMediaCollection(DiagnosticCategory::IMAGE);
-        }
 
         return redirect()->route('admin.diagnostic-categories.index')
             ->with('success', 'Diagnostic Category updated successfully!');
@@ -72,6 +83,11 @@ class DiagnosticCategoryController extends Controller
     public function destroy(string $id)
     {
         $category = DiagnosticCategory::findOrFail($id);
+
+        if ($category->image && file_exists(public_path('images/diagnostic_categories/' . $category->image))) {
+            unlink(public_path('images/diagnostic_categories/' . $category->image));
+        }
+
         $category->delete();
 
         return redirect()->route('admin.diagnostic-categories.index')
@@ -82,7 +98,7 @@ class DiagnosticCategoryController extends Controller
     {
         $columns = ['name', 'type', 'description', 'status', 'created_at', 'id'];
 
-        $query = DiagnosticCategory::select('id', 'name', 'type', 'description', 'status', 'created_at');
+        $query = DiagnosticCategory::select('id', 'name', 'type', 'description', 'status', 'created_at', 'image');
 
         if ($search = strtoupper($request->input('search.value'))) {
             $query->where(function ($q) use ($search) {

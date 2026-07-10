@@ -31,16 +31,20 @@ class DiagnosticController extends Controller
     {
         $request->validate(Diagnostic::$rules);
 
+        $imageName = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/diagnostics'), $imageName);
+        }
+
         $diagnostic = Diagnostic::create([
             'diagnostic_category_id' => $request->diagnostic_category_id,
             'name' => $request->name,
             'price' => $request->price,
             'status' => $request->has('status') ? (bool)$request->status : true,
+            'image' => $imageName,
         ]);
-
-        if ($request->hasFile('image')) {
-            $diagnostic->addMediaFromRequest('image')->toMediaCollection(Diagnostic::IMAGE);
-        }
 
         $category = DiagnosticCategory::find($request->diagnostic_category_id);
         $redirectRoute = ($category && $category->type === 'path') ? 'admin.diagnostics.indexPath' : 'admin.diagnostics.indexDiag';
@@ -66,17 +70,24 @@ class DiagnosticController extends Controller
 
         $request->validate($rules);
 
+        $imageName = $diagnostic->image;
+        if ($request->hasFile('image')) {
+            if ($diagnostic->image && file_exists(public_path('images/diagnostics/' . $diagnostic->image))) {
+                unlink(public_path('images/diagnostics/' . $diagnostic->image));
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/diagnostics'), $imageName);
+        }
+
         $diagnostic->update([
             'diagnostic_category_id' => $request->diagnostic_category_id,
             'name' => $request->name,
             'price' => $request->price,
             'status' => $request->has('status') ? (bool)$request->status : true,
+            'image' => $imageName,
         ]);
-
-        if ($request->hasFile('image')) {
-            $diagnostic->clearMediaCollection(Diagnostic::IMAGE);
-            $diagnostic->addMediaFromRequest('image')->toMediaCollection(Diagnostic::IMAGE);
-        }
 
         $category = DiagnosticCategory::find($request->diagnostic_category_id);
         $redirectRoute = ($category && $category->type === 'path') ? 'admin.diagnostics.indexPath' : 'admin.diagnostics.indexDiag';
@@ -89,6 +100,11 @@ class DiagnosticController extends Controller
     {
         $diagnostic = Diagnostic::findOrFail($id);
         $category = $diagnostic->category;
+
+        if ($diagnostic->image && file_exists(public_path('images/diagnostics/' . $diagnostic->image))) {
+            unlink(public_path('images/diagnostics/' . $diagnostic->image));
+        }
+
         $diagnostic->delete();
 
         $redirectRoute = ($category && $category->type === 'path') ? 'admin.diagnostics.indexPath' : 'admin.diagnostics.indexDiag';
@@ -103,7 +119,7 @@ class DiagnosticController extends Controller
 
         $query = Diagnostic::whereHas('category', function($q) use ($type) {
             $q->where('type', $type);
-        })->with('category')->select('id', 'diagnostic_category_id', 'name', 'price', 'status', 'created_at');
+        })->with('category')->select('id', 'diagnostic_category_id', 'name', 'price', 'status', 'created_at', 'image');
 
         if ($search = strtoupper($request->input('search.value'))) {
             $query->where(function ($q) use ($search) {

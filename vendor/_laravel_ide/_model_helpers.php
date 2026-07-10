@@ -664,6 +664,7 @@ namespace App\Models {
 	 *
 	 * @property \Illuminate\Support\Carbon|null $updated_at
 	 * @property \Illuminate\Support\Carbon|null $created_at
+	 * @property string|null $image
 	 * @property boolean $status
 	 * @property float $price
 	 * @property string $name
@@ -675,13 +676,12 @@ namespace App\Models {
 	 * @property-read int|null $booking_items_count
 	 * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\HealthPackage> $healthPackages
 	 * @property-read int|null $health_packages_count
-	 * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
-	 * @property-read int|null $media_count
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereId($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereDiagnosticCategoryId($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereName($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic wherePrice($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereStatus($value)
+	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereImage($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereCreatedAt($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic whereUpdatedAt($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<Diagnostic>|Diagnostic newModelQuery()
@@ -1312,6 +1312,7 @@ namespace App\Models {
 	 *
 	 * @property \Illuminate\Support\Carbon|null $updated_at
 	 * @property \Illuminate\Support\Carbon|null $created_at
+	 * @property string|null $image
 	 * @property boolean $status
 	 * @property string|null $description
 	 * @property string $type
@@ -1320,13 +1321,12 @@ namespace App\Models {
 	 * @property-read mixed $image_url
 	 * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Diagnostic> $diagnostics
 	 * @property-read int|null $diagnostics_count
-	 * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
-	 * @property-read int|null $media_count
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereId($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereName($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereType($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereDescription($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereStatus($value)
+	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereImage($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereCreatedAt($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory whereUpdatedAt($value)
 	 * @method static \Illuminate\Database\Eloquent\Builder<DiagnosticCategory>|DiagnosticCategory newModelQuery()

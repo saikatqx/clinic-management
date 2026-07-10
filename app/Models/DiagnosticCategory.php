@@ -5,14 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class DiagnosticCategory extends Model implements HasMedia
+class DiagnosticCategory extends Model
 {
-    use HasFactory, InteractsWithMedia;
-
-    public const IMAGE = 'image';
+    use HasFactory;
 
     protected $table = 'diagnostic_categories';
 
@@ -23,6 +19,7 @@ class DiagnosticCategory extends Model implements HasMedia
         'type',
         'description',
         'status',
+        'image',
     ];
 
     protected $casts = [
@@ -30,6 +27,7 @@ class DiagnosticCategory extends Model implements HasMedia
         'type' => 'string',
         'description' => 'string',
         'status' => 'boolean',
+        'image' => 'string',
     ];
 
     public static $rules = [
@@ -37,7 +35,7 @@ class DiagnosticCategory extends Model implements HasMedia
         'type' => 'required|in:diag,path',
         'description' => 'nullable|string',
         'status' => 'nullable|boolean',
-        'image' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:1024',
     ];
 
     public function diagnostics(): HasMany
@@ -47,8 +45,6 @@ class DiagnosticCategory extends Model implements HasMedia
 
     public function getImageUrlAttribute(): string
     {
-        $media = $this->getFirstMedia(self::IMAGE);
-
-        return $media ? $media->getFullUrl() : '';
+        return $this->image ? asset('images/diagnostic_categories/' . $this->image) : '';
     }
 }

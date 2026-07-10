@@ -138,7 +138,7 @@ class HealthPackageController extends Controller
     {
         $columns = ['name', 'gender', 'actual_price', 'package_price', 'status', 'id'];
 
-        $query = HealthPackage::select('id', 'name', 'gender', 'actual_price', 'package_price', 'status');
+        $query = HealthPackage::select('id', 'name', 'gender', 'actual_price', 'package_price', 'status', 'image');
 
         if ($search = strtoupper($request->input('search.value'))) {
             $query->where(function ($q) use ($search) {

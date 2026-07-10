@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -37,6 +38,17 @@ Route::get('/admin', function () {
         return redirect()->route('admin.dashboard');
     }
     return redirect()->route('login');
+});
+
+Route::get('/clear-cache', function () {
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('view:clear');
+    Artisan::call('optimize:clear');
+    Artisan::call('permission:cache-reset');
+
+    return "Cache Cleared!";
 });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
